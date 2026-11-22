@@ -1,0 +1,21 @@
+# GitHub Pages configuration for Anatomy 3D
+# The app is a single static HTML file, so no theme or plugins are needed.
+
+title: Anatomy 3D
+description: Interactive 3D human body atlas with quiz, simulation, guided journeys and narration. Hebrew and English.
+lang: en
+
+# Set these to match your repository.
+# For a project site at https://<username>.github.io/anatomy-3d/ use:
+#   url: https://<username>.github.io
+#   baseurl: /anatomy-3d
+# For a user site (repository named <username>.github.io) leave baseurl empty.
+url: ""
+baseurl: ""
+
+# Files that should not be published on the site.
+exclude:
+  - README.md
+  - LICENSE
+  - .gitignore
+  - node_modules

@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anatomy 3D</title>
+<meta name="description" content="Interactive 3D human body atlas with quiz, simulation and guided journeys. Hebrew and English.">
+<meta property="og:title" content="Anatomy 3D – human body atlas">
+<meta property="og:description" content="Explore organs and body systems in 3D, run a live heart and lung simulation, and test yourself.">
+<meta name="theme-color" content="#ff3b5c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%23ff3b5c%27/%3E%3Cpath d=%27M4 17h6l3-7 5 13 3-6h7%27 stroke=%27white%27 stroke-width=%273%27 fill=%27none%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg1:#f6f8fc; --bg2:#d9e3f1; --card:rgba(255,255,255,.86); --card2:rgba(15,27,45,.045);
+  --ink:#0f1b2d; --muted:#5d6b82; --line:rgba(15,27,45,.1); --accent:#ff3b5c; --accent2:#2b6cff; --onaccent:#fff;
+  --shadow:0 18px 50px -18px rgba(25,45,95,.35); --gold:#b8860b; --factbg:rgba(255,184,0,.14);
+}
+body[data-theme=dark]{
+  --bg1:#1a2745; --bg2:#070b16; --card:rgba(20,31,56,.84); --card2:rgba(255,255,255,.06);
+  --ink:#eaf0ff; --muted:#9fb0cf; --line:rgba(255,255,255,.12); --accent:#ff5a78; --accent2:#6b97ff;
+  --shadow:0 18px 50px -18px rgba(0,0,0,.7); --gold:#ffd25e; --factbg:rgba(255,210,94,.1);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--bg2);color:var(--ink);font-family:"Inter","Segoe UI","Heebo","Assistant",system-ui,Arial,sans-serif;-webkit-font-smoothing:antialiased;font-size:15px}
+#stage{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 35%,var(--bg1) 0%,var(--bg2) 85%)}
+#stage canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+
+/* header */
+#top{position:fixed;inset-block-start:0;inset-inline:0;display:flex;align-items:center;gap:10px;padding:14px 18px;z-index:6;pointer-events:none}
+#top>*{pointer-events:auto}
+.logo{display:flex;align-items:center;gap:10px;margin-inline-end:auto}
+.logo i{width:38px;height:38px;border-radius:12px;background:var(--accent);display:grid;place-items:center;box-shadow:0 8px 20px -8px var(--accent)}
+.logo svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.logo b{font-size:18px;letter-spacing:-.2px;display:block;line-height:1.1}
+.logo small{display:block;color:var(--muted);font-size:12px}
+.pill{background:var(--card);border:1px solid var(--line);border-radius:999px;box-shadow:var(--shadow);backdrop-filter:blur(14px);display:flex;align-items:center}
+.seg button{border:0;background:none;padding:7px 13px;border-radius:999px;font-weight:600;font-size:13px;color:var(--muted)}
+.seg{padding:3px}
+.seg button.on{background:var(--ink);color:var(--bg1)}
+.ibtn{width:38px;height:38px;justify-content:center;border:1px solid var(--line);padding:0;cursor:pointer}
+.ibtn svg{width:19px;height:19px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#vitals{padding:6px 14px;gap:14px;font-weight:700;font-size:14px;cursor:pointer;border:1px solid var(--line)}
+#vitals span{display:flex;align-items:center;gap:6px}
+#vitals small{font-weight:500;color:var(--muted);font-size:11px}
+#vitals .hd{width:9px;height:9px;border-radius:50%;background:var(--accent);animation:hb 1s infinite}
+@keyframes hb{0%,100%{transform:scale(1)}15%{transform:scale(1.5)}30%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){#vitals .hd{animation:none}}
+
+/* cards */
+.card{position:fixed;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);backdrop-filter:blur(16px);z-index:5}
+#sheet{inset-block-start:76px;inset-inline-start:16px;width:330px;max-height:calc(100% - 180px);overflow:auto;padding:18px;display:none}
+#info{inset-block-start:76px;inset-inline-end:16px;width:340px;max-height:calc(100% - 180px);overflow:auto;padding:20px}
+.h1{font-size:22px;font-weight:800;letter-spacing:-.3px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+.sec{font-size:12px;font-weight:700;color:var(--muted);margin:16px 0 8px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700;color:#0b1220;border:0;margin-bottom:10px}
+.chip.btnlike{cursor:pointer}
+#info h2{margin:0;font-size:28px;letter-spacing:-.5px;line-height:1.15}
+#info .en{color:var(--muted);font-size:13px;margin:2px 0 14px}
+.blk{margin:0 0 12px}
+.blk b{display:block;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:3px}
+.blk p{margin:0;line-height:1.6}
+.fact{background:var(--factbg);border-radius:14px;padding:11px 13px;margin-top:12px}
+.fact b{color:var(--gold)}
+.chips button{margin:0 0 6px;margin-inline-end:6px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card2);font-size:13px}
+.chips button:hover{border-color:var(--accent);color:var(--accent)}
+.search{width:100%;padding:11px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card2);color:var(--ink);font:inherit}
+#results{list-style:none;margin:6px 0 0;padding:0}
+#results button{display:block;width:100%;text-align:start;background:none;border:0;padding:8px 10px;border-radius:10px}
+#results button:hover{background:var(--card2)}
+.sys{display:flex;align-items:center;gap:10px;padding:6px 4px;border-radius:12px}
+.sys:hover{background:var(--card2)}
+.sw{position:relative;width:34px;height:20px;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.sw span{position:absolute;inset:0;border-radius:99px;background:rgba(120,130,150,.35);transition:background .2s}
+.sw span:after{content:"";position:absolute;inset-block-start:2px;inset-inline-start:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:inset-inline-start .2s}
+.sw input:checked+span{background:var(--c)}
+.sw input:checked+span:after{inset-inline-start:16px}
+.sw input:focus-visible+span{outline:2px solid var(--accent2);outline-offset:2px}
+.sys .nm{flex:1;font-weight:600;font-size:14px}
+.sys .i{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:none;font-size:12px;font-weight:700;padding:0;color:var(--muted)}
+.sys .i:hover{border-color:var(--accent);color:var(--accent)}
+.row{display:flex;gap:8px;margin-top:10px}
+.btn{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:9px 14px;font-weight:600;font-size:14px;transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--onaccent)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.on{background:var(--ink);color:var(--bg1);border-color:var(--ink)}
+.row .btn{flex:1}
+.opt{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;font-size:13px;color:var(--muted)}
+.opt input[type=range]{width:120px;accent-color:var(--accent)}
+.opt input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+
+/* simulate */
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 14px}
+.gauge{background:var(--card2);border-radius:16px;padding:12px;text-align:center}
+.gauge b{display:block;font-size:34px;line-height:1;letter-spacing:-1px}
+.gauge span{font-size:12px;color:var(--muted)}
+.gauge.h b{color:var(--accent)} .gauge.l b{color:var(--accent2)}
+.acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.acts .btn{padding:10px 6px;font-size:13px}
+#simtext{margin:14px 0 0;line-height:1.6;color:var(--muted);font-size:14px}
+
+/* quiz */
+.qh{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:6px}
+.bar{height:6px;border-radius:9px;background:var(--card2);overflow:hidden;margin-bottom:14px}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.qt{font-size:19px;font-weight:700;line-height:1.4;margin:0 0 14px}
+.qt em{font-style:normal;color:var(--accent)}
+.opts{display:grid;gap:8px}
+.opts button{padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card2);text-align:start;font-weight:600}
+.opts button:hover:not(:disabled){border-color:var(--accent)}
+.opts .good{background:rgba(40,190,110,.25);border-color:#28be6e}
+.opts .bad{background:rgba(255,59,92,.22);border-color:var(--accent)}
+.fb{min-height:22px;margin-top:12px;font-weight:600}
+.fb.good{color:#1c9a5a}.fb.bad{color:var(--accent)}
+.big{font-size:52px;font-weight:800;letter-spacing:-2px;color:var(--accent);line-height:1}
+
+/* nav */
+#nav{position:fixed;inset-block-end:16px;inset-inline:0;margin:0 auto;width:max-content;max-width:calc(100% - 20px);padding:6px;gap:4px;z-index:7}
+#nav button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 15px;border-radius:999px;font-size:12px;font-weight:700;color:var(--muted)}
+#nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#nav button:hover{color:var(--ink)}
+#nav button.on{background:var(--ink);color:var(--bg1)}
+
+#tag{position:fixed;z-index:4;pointer-events:none;padding:4px 12px;border-radius:999px;background:var(--ink);color:var(--bg1);font-size:13px;font-weight:700;transform:translate(-50%,-150%);white-space:nowrap}
+#tip{position:fixed;z-index:8;pointer-events:none;padding:4px 10px;border-radius:8px;background:var(--ink);color:var(--bg1);font-size:13px;font-weight:600;transform:translate(12px,-130%);display:none}
+.help{position:fixed;inset-block-end:92px;inset-inline-end:18px;font-size:12px;color:var(--muted);z-index:3;max-width:230px;pointer-events:none;text-align:end}
+
+#themeMenu{position:fixed;inset-block-start:64px;inset-inline-end:18px;z-index:9;padding:14px;width:300px;display:none}
+#themeMenu h4{margin:0 0 10px;font-size:13px;color:var(--muted)}
+#themeMenu .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#themeMenu button{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;border:2px solid transparent;background:var(--card2);font-weight:600;font-size:13px;text-align:start}
+#themeMenu button.on{border-color:var(--accent)}
+#themeMenu i{width:28px;height:28px;border-radius:50%;flex:none;border:1px solid var(--line)}
+.seg2{display:flex;gap:6px}
+.seg2 button{flex:1;padding:8px 6px;border-radius:12px;border:1px solid var(--line);background:var(--card2);font-weight:600;font-size:13px}
+.seg2 button.on{background:var(--ink);color:var(--bg1);border-color:var(--ink)}
+.jcard{display:block;width:100%;text-align:start;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--card2);margin-bottom:10px}
+.jcard:hover{border-color:var(--accent)}
+.emerg{background:rgba(255,59,92,.12);border:1px solid var(--accent);border-radius:12px;padding:9px 11px;font-size:13px;margin:10px 0;line-height:1.5}
+#p-conditions details{border-top:1px solid var(--line);padding:9px 0}
+#p-conditions summary{font-weight:700;cursor:pointer}
+#p-conditions details ul{margin:8px 0 0;padding-inline-start:20px;line-height:1.6;font-size:14px}
+.spk{float:inline-end;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card2);display:inline-grid;place-items:center;padding:0;margin-inline-start:8px;color:var(--ink)}
+.spk:hover{border-color:var(--accent);color:var(--accent)}
+.spk svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.spk .i-stop{display:none}
+body.speaking .spk .i-stop{display:block}
+body.speaking .spk .i-play{display:none}
+body.speaking .spk{border-color:var(--accent);color:var(--accent)}
+#bNarr.on{background:var(--accent);border-color:var(--accent)}
+#bNarr.on svg{stroke:#fff}
+#toast{position:fixed;inset-block-start:70px;inset-inline:0;margin:0 auto;width:max-content;max-width:calc(100% - 28px);z-index:30;background:var(--ink);color:var(--bg1);padding:10px 16px;border-radius:14px;font-size:14px;display:none;box-shadow:var(--shadow);line-height:1.5}
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(8,14,28,.55);backdrop-filter:blur(4px);z-index:20;display:none;align-items:center;justify-content:center;padding:14px}
+#modal .box{width:min(920px,100%);max-height:100%;overflow:auto;background:var(--modal,var(--bg1));color:var(--ink);border:1px solid var(--line);border-radius:26px;padding:24px;box-shadow:var(--shadow)}
+
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.tabs button{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:none;font-weight:600}
+.tabs button.on{background:var(--ink);color:var(--bg1);border-color:var(--ink)}
+#modal h2{margin:0 0 8px;font-size:26px;letter-spacing:-.4px}
+#modal h4{margin:18px 0 4px;color:var(--accent)}
+#modal p,#modal li{line-height:1.7}
+.levels{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.levels div{flex:1 1 130px;background:var(--card2);border-radius:16px;padding:12px;font-size:13px;line-height:1.5}
+.levels b{display:block;font-size:15px;color:var(--accent);margin-bottom:2px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.cc{border-radius:18px;padding:14px;background:var(--card2);border-block-start:5px solid}
+.cc h4{margin:0 0 4px;color:var(--ink)}
+.cc p{margin:0 0 8px;font-size:14px;line-height:1.55}
+
+@media (max-width:820px){
+  .logo small,.help,#vitals small{display:none}
+  #sheet{inset-block-start:auto;inset-block-end:92px;inset-inline:10px;width:auto;max-height:46%}
+  #info{inset-block-start:auto;inset-block-end:92px;inset-inline:10px;width:auto;max-height:40%}
+  body.quizOn #info{display:none}
+  #nav button{padding:8px 7px;font-size:11px}
+}
+</style>
+</head>
+<body data-theme="light">
+<div id="stage"></div>
+
+<header id="top">
+  <div class="logo"><i><svg viewBox="0 0 24 24"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></i><div><b data-i18n="app"></b><small data-i18n="tagline"></small></div></div>
+  <div class="pill" id="vitals" role="button" tabindex="0"><span><i class="hd"></i><b id="bpm">72</b><small data-i18n="bpmU"></small></span><span><b id="brpm">14</b><small data-i18n="brU"></small></span></div>
+  <div class="pill seg" id="langseg"><button data-lang="he">עב</button><button data-lang="en">EN</button></div>
+  <button class="pill ibtn" id="bNarr" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
+  <button class="pill ibtn" id="bTheme" aria-label="Theme"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.4-.6-.4-1 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.1-4-7.5-9-7.5z"/><path d="M7.5 11h.01M10 7.5h.01M14.5 7.5h.01"/></svg></button>
+</header>
+
+<section id="sheet" class="card" aria-live="polite">
+  <div id="p-explore">
+    <input id="search" class="search" type="search" data-i18n-ph="search">
+    <ul id="results"></ul>
+    <div class="sec" data-i18n="systems"></div>
+    <div id="syslist"></div>
+    <div class="row"><button class="btn" id="bAll" data-i18n="showAll"></button><button class="btn" id="bNone" data-i18n="hideAll"></button></div>
+    <label class="opt"><span data-i18n="skin"></span><input id="skinOp" type="range" min="0.04" max="0.85" step="0.01" value="0.14"></label>
+    <label class="opt"><span data-i18n="dim"></span><input id="dimChk" type="checkbox" checked></label>
+    <label class="opt"><span data-i18n="auto"></span><input id="autoChk" type="checkbox"></label>
+    <div id="settingsBox"></div>
+    <div class="row"><button class="btn" id="bReset" data-i18n="reset"></button></div>
+  </div>
+  <div id="p-sim" style="display:none">
+    <h3 class="h1" data-i18n="simTitle"></h3><p class="sub" data-i18n="simSub"></p>
+    <div class="gauges"><div class="gauge h"><b id="bpm2">72</b><span data-i18n="bpmU"></span></div><div class="gauge l"><b id="brpm2">14</b><span data-i18n="brU"></span></div></div>
+    <div class="acts" id="acts"></div>
+    <p id="simtext"></p>
+  </div>
+  <div id="p-quiz" style="display:none"></div>
+  <div id="p-journey" style="display:none"></div>
+  <div id="p-conditions" style="display:none"></div>
+</section>
+
+<section id="info" class="card" aria-live="polite"></section>
+
+<nav id="nav" class="pill" aria-label="Main">
+  <button data-tab="explore"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg><span data-i18n="tExplore"></span></button>
+  <button data-tab="sim"><svg viewBox="0 0 24 24"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg><span data-i18n="tSim"></span></button>
+  <button data-tab="quiz"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 1 1 3.6 2.4c-.7.4-1.1.9-1.1 1.8M12 17h.01"/></svg><span data-i18n="tQuiz"></span></button>
+  <button data-tab="conditions"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z"/><path d="M7 12h3l1.5-3 2 5 1.5-2h2"/></svg><span data-i18n="tCond"></span></button>
+  <button data-tab="journey"><svg viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5"/></svg><span data-i18n="tJourney"></span></button>
+  <button data-tab="learn"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 19V5.5M8 7h8"/></svg><span data-i18n="tLearn"></span></button>
+</nav>
+
+<div id="themeMenu" class="card"></div>
+<div id="toast" role="status"></div>
+<div id="tag" style="display:none"></div>
+<div id="tip"></div>
+<div class="help" data-i18n="help"></div>
+<div id="modal"><div class="box" id="modalBox"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+/* ===================== DATA ===================== */
+const SYSTEMS = {
+  skin:{he:'מערכת העור',color:'#e8b896',sum:'העור הוא האיבר הגדול ביותר בגוף (כ־2 מ״ר). הוא עוטף ומגן מפני חיידקים, מים ופגיעות, מווסת את חום הגוף באמצעות הזעה, ומכיל קצות עצב לחישת מגע, חום וכאב.',fact:'העור מתחדש כל כ־4–6 שבועות, ואנחנו משילים אלפי תאי עור בכל דקה.',origin:'השכבה החיצונית של העור באה מהאקטודרם, והשכבה העמוקה יותר מהמזודרם.'},
+  skeletal:{he:'מערכת השלד',color:'#efe6cf',sum:'השלד מורכב מ־206 עצמות אצל מבוגר (בלידה יש כ־300, שחלקן מתחברות עם הזמן). הוא נותן לגוף צורה, מגן על איברים רכים, מאפשר תנועה יחד עם השרירים, אוגר סידן ומייצר תאי דם במח העצם.',fact:'העצם החזקה פי כמה מבטון באותו משקל – והיא חיה, מתחדשת ומתאחה לבד אחרי שבר.',origin:'מתפתחת בעיקר מהמזודרם (השכבה האמצעית של העובר).'},
+  muscular:{he:'מערכת השרירים',color:'#c0392b',sum:'בגוף יש מעל 600 שרירים. שרירי שלד נשלטים ברצון ומזיזים את העצמות; שרירים חלקים (בקיר המעיים וכלי הדם) ושריר הלב עובדים לבד, בלי שנחשוב עליהם.',fact:'השרירים יכולים רק למשוך ולא לדחוף – לכן הם עובדים בזוגות נגדיים.',origin:'מזודרם.'},
+  circulatory:{he:'מערכת הדם',color:'#e63946',sum:'הלב והכלים יוצרים רשת סגורה שמובילה חמצן, חומרי מזון, הורמונים ותאי חיסון לכל תא, ואוספת פסולת. בגוף מבוגר יש כ־5 ליטר דם.',fact:'הדם עושה סיבוב מלא בגוף בערך תוך דקה במנוחה.',origin:'הלב וכלי הדם הם הראשונים שמתחילים לפעול בעובר – מזודרם.'},
+  respiratory:{he:'מערכת הנשימה',color:'#f4a3b5',sum:'האף, קנה הנשימה והריאות מכניסים חמצן לדם ומוציאים פחמן דו־חמצני. ההחלפה מתרחשת בשקיקי אוויר זעירים (נאדיות) שעוטפים אותם נימי דם.',fact:'אנחנו נושמים כ־20,000 פעמים ביום, בלי לחשוב על זה.',origin:'הרירית הפנימית מהאנדודרם, והשרירים והסחוסים מהמזודרם.'},
+  digestive:{he:'מערכת העיכול',color:'#e9a15b',sum:'צינור ארוך מהפה ועד פי הטבעת, עם עזרה מהכבד, כיס המרה והלבלב. המזון מתפרק לחומרים קטנים שנספגים לדם, והשאריות מופרשות.',fact:'המזון נע בצינור העיכול בערך 1–3 ימים מהפה ועד היציאה.',origin:'הרירית מהאנדודרם (שכבת העובר הפנימית), והשרירים מהמזודרם.'},
+  nervous:{he:'מערכת העצבים',color:'#f6d743',sum:'מערכת התקשורת והבקרה של הגוף. המוח וחוט השדרה (מערכת מרכזית) מעבדים מידע, והעצבים ההיקפיים מעבירים אותות בין האיברים למוח. בנוסף כוללת את איברי החישה, כמו העיניים.',fact:'במוח כ־86 מיליארד תאי עצב, וכל אחד מהם מתחבר לאלפי תאים אחרים.',origin:'אקטודרם – השכבה החיצונית של העובר מתקפלת ויוצרת את "צינור העצב".'},
+  urinary:{he:'מערכת השתן',color:'#6fd0c8',sum:'הכליות מסננות את הדם ומייצרות שתן; השופכנים מעבירים אותו לשלפוחית, ומשם הוא יוצא מהגוף. המערכת שומרת על איזון המים והמלחים ועל לחץ הדם.',fact:'כל הדם בגוף עובר דרך הכליות כמה עשרות פעמים ביום.',origin:'מזודרם.'},
+  endocrine:{he:'מערכת ההורמונים',color:'#b07cf0',sum:'בלוטות שמפרישות הורמונים – שליחים כימיים שנעים בדם ומשפיעים על גדילה, אנרגיה, מצב רוח, סוכר בדם ועוד. בסימולציה: בלוטת התריס, הלבלב ויותרות הכליה.',fact:'כמות ההורמון בדם יכולה להיות זעירה ועדיין להשפיע על הגוף כולו.',origin:'משתנה בין הבלוטות: אנדודרם, מזודרם ואקטודרם.'},
+  immune:{he:'מערכת החיסון והלימפה',color:'#7ccf6b',sum:'צבא הגנה של תאים, איברים וכלי לימפה שמזהה ומחסל חיידקים, נגיפים ותאים פגומים, וזוכר אותם להמשך. הלימפה היא נוזל שנאסף מהרקמות ועובר דרך בלוטות מסננות.',fact:'חיסונים "מלמדים" את המערכת הזאת לזהות מחולל מחלה לפני שפוגשים אותו.',origin:'בעיקר מזודרם; התימוס מאנדודרם.'}
+};
+const SYS_ORDER=['skin','skeletal','muscular','circulatory','respiratory','digestive','nervous','urinary','endocrine','immune'];
+
+const MESO='מזודרם (שכבת העובר האמצעית)', ECTO='אקטודרם (שכבת העובר החיצונית)', ENDO='אנדודרם (שכבת העובר הפנימית)';
+function O(id,he,en,sys,desc,fn,origin,fact,hint,extra){return Object.assign({id,he,en,sys,desc,fn,origin,fact,hint},extra||{});}
+const ORGANS=[
+ O('skull','גולגולת','Skull','skeletal','מבנה עצם קשיח שעוטף את המוח ומעצב את הפנים. בנוי מ־22 עצמות שמחוברות בתפרים.','מגנה על המוח, העיניים והאוזניים, ומאפשרת ללעוס בעזרת הלסת.','בעיקר מזודרם, יחד עם תאי "ציצת העצב".','עצמות הגולגולת של תינוק עדיין לא מחוברות לגמרי – כך הראש יכול לעבור בלידה ולגדול אחר כך.','מגן על המוח כמו קסדה',{soft:1}),
+ O('spine','עמוד שדרה','Vertebral column','skeletal','ערימה של 33 חוליות (24 מהן ניידות) עם דיסקיות רכות ביניהן.','תומך בגוף, מאפשר להתכופף ולהסתובב, ומגן על חוט השדרה.',MESO,'בבוקר אנחנו גבוהים בערך סנטימטר מאשר בערב, כי הדיסקיות נדחסות במהלך היום.','תומך בגוף ומגן על חוט השדרה'),
+ O('ribs','צלעות (בית החזה)','Rib cage','skeletal','12 זוגות צלעות שיוצרות כלוב סביב הלב והריאות.','מגנות על הלב והריאות וזזות בזמן הנשימה.',MESO,'הצלעות התחתונות נקראות "צלעות צפות" כי הן לא מחוברות לעצם החזה.','כלוב שמגן על הלב והריאות'),
+ O('sternum','עצם החזה','Sternum','skeletal','עצם שטוחה באמצע החזה שאליה מתחברות רוב הצלעות.','מחזיקה את בית החזה מקדימה ומגנה על הלב.',MESO,'היא מלאה במח עצם מייצר דם, ולכן לפעמים דוגמים ממנה בבדיקות.','עצם שטוחה באמצע החזה שמגנה על הלב'),
+ O('clavicle','עצם הבריח','Clavicle','skeletal','עצם דקה ואופקית בין עצם החזה לכתף.','פועלת כמו תמוכה: מרחיקה את הכתף מהגוף ומאפשרת לזרוע לנוע בחופשיות.',MESO,'היא אחת העצמות שנשברות הכי הרבה בנפילות.','תמוכה בין החזה לכתף'),
+ O('humerus','עצם הזרוע','Humerus','skeletal','עצם ארוכה בזרוע העליונה, בין הכתף למרפק.','משמשת כמנוף שהשרירים מושכים כדי להזיז את הזרוע.',MESO,'המכה ב"עצם המצחיקה" במרפק היא בעצם מכה בעצב שעובר קרוב לעור.','העצם הארוכה של הזרוע העליונה'),
+ O('forearm','עצמות האמה','Radius & ulna','skeletal','שתי עצמות (רדיוס ואולנה) בין המרפק לשורש כף היד.','מאפשרות לסובב את כף היד כלפי מעלה ומטה.',MESO,'כשמסובבים את כף היד, שתי העצמות חוצות זו את זו.','שתי עצמות בין המרפק לכף היד'),
+ O('hand','עצמות כף היד','Hand bones','skeletal','27 עצמות קטנות: שורש כף היד, כף היד והאצבעות.','מאפשרות אחיזה עדינה ושימוש בכלים.',MESO,'בשתי הידיים יחד יש כרבע מכלל עצמות הגוף.','27 עצמות שמאפשרות אחיזה'),
+ O('pelvis','אגן','Pelvis','skeletal','טבעת עצם רחבה בתחתית עמוד השדרה.','נושאת את משקל הגוף העליון, מגנה על איברים בבטן התחתונה ומחברת את הרגליים לגוף.',MESO,'האגן הוא אחד ההבדלים הבולטים בין שלד גבר לשלד אישה.','טבעת עצם שמחברת את הרגליים לגוף'),
+ O('femur','עצם הירך','Femur','skeletal','העצם הארוכה, החזקה והכבדה ביותר בגוף.','נושאת את משקל הגוף ומאפשרת הליכה וריצה.',MESO,'אורכה כרבע מגובה האדם.','העצם הארוכה והחזקה ביותר בגוף'),
+ O('tibia','עצמות השוק','Tibia & fibula','skeletal','השוק בנויה משתי עצמות: הטיביה (העבה) והפיבולה (הדקה).','הטיביה נושאת את רוב המשקל, והפיבולה מייצבת את הקרסול.',MESO,'הטיביה היא העצם השנייה בגודלה בגוף.','עצם עבה מתחת לברך שנושאת את המשקל'),
+ O('foot','עצמות כף הרגל','Foot bones','skeletal','26 עצמות המסודרות בקשתות.','פועלות כמו קפיץ: קולטות זעזועים בהליכה ודוחפות את הגוף קדימה.',MESO,'בשתי כפות הרגליים יש כרבע מעצמות הגוף.','26 עצמות עם קשת קפיצית'),
+
+ O('pectoral','שריר החזה','Pectoralis major','muscular','שריר גדול ושטוח בחלק העליון של החזה.','מקרב ומסובב את הזרוע פנימה – כמו בדחיפה או בחיבוק.',MESO,'שרירים עובדים בזוגות: אחד מושך, והשני מחזיר.','מושך את הזרוע קדימה כמו בחיבוק',{soft:1}),
+ O('deltoid','שריר הכתף','Deltoid','muscular','שריר בצורת משולש שעוטף את הכתף.','מרים את הזרוע לצדדים ולפנים.',MESO,'שמו בא מהאות היוונית דלתא (Δ) בגלל צורתו.','מרים את הזרוע לצדדים',{soft:1}),
+ O('biceps','שריר דו־ראשי','Biceps brachii','muscular','שריר בחלק הקדמי של הזרוע העליונה, עם שני "ראשים".','מכופף את המרפק ומסובב את כף היד.',MESO,'"ביצפס" בלטינית פירושו "דו־ראשי".','מכופף את המרפק',{soft:1}),
+ O('abs','שרירי הבטן','Rectus abdominis','muscular','שרירים אורכיים שמחולקים ל"קוביות" על ידי רצועות.','מכופפים את הגוף קדימה ומייצבים את הגזע.',MESO,'ה"קוביות" קיימות אצל כולם – רק שהן מכוסות בשכבת שומן.','"קוביות" שמכופפות את הגוף קדימה',{soft:1}),
+ O('quads','שריר הארבע־ראשי','Quadriceps','muscular','קבוצה של ארבעה שרירים בקדמת הירך.','מיישרים את הברך – חיוניים להליכה, לריצה ולקפיצה.',MESO,'אחת מקבוצות השרירים הגדולות והחזקות בגוף.','מיישר את הברך',{soft:1}),
+ O('calf','שריר השוק','Gastrocnemius','muscular','השריר הבולט בגב השוק (התאומי).','מרים את העקב ודוחף את הגוף קדימה בהליכה.',MESO,'הוא מחובר לעקב באמצעות גיד אכילס – הגיד העבה והחזק בגוף.','מרים את העקב',{soft:1}),
+ O('diaphragm','סרעפת','Diaphragm','muscular','שריר רחב בצורת כיפה שמפריד בין בית החזה לבטן.','כשהיא מתכווצת היא יורדת, החזה מתרחב ואוויר נשאב לריאות – המנוע העיקרי של הנשימה.',MESO,'שיהוק הוא התכווצות פתאומית ולא רצונית שלה.','שריר בצורת כיפה שמפעיל את הנשימה',{soft:1,amb:1}),
+
+ O('heart','לב','Heart','circulatory','שריר חזק בגודל אגרוף, עם ארבעה חללים: שני פרוזדורים ושני חדרים. נמצא באמצע החזה ונוטה מעט שמאלה.','שואב דם לכל הגוף בלי הפסקה – כ־100,000 פעימות ביום.',MESO,'הלב מתחיל לפעום כבר בשבועות הראשונים להריון, הרבה לפני שנולדים.','משאבה שרירית שמזרימה דם בגוף'),
+ O('arteries','עורקים','Arteries','circulatory','צינורות עבי דופן שמובילים דם עשיר בחמצן (אדום בהיר) מהלב אל הגוף. הגדול שבהם הוא אבי העורקים (אאורטה).','מעבירים חמצן וחומרי מזון לכל איבר. המישוש של הדופק הוא הרגשת העורק מתרחב עם כל פעימה.',MESO,'לאבי העורקים קוטר של בערך צינור גינה.','צינורות שמובילים דם עשיר בחמצן מהלב'),
+ O('veins','ורידים','Veins','circulatory','כלי דם דקי דופן עם שסתומים, שמחזירים דם דל בחמצן אל הלב (מסומנים כחול).','מחזירים את הדם ללב; שסתומים קטנים מונעים ממנו לזרום אחורה.',MESO,'לפי הערכות, אורך כל כלי הדם בגוף כ־100,000 ק״מ – יותר מפעמיים סביב כדור הארץ.','מחזירים דם דל בחמצן אל הלב'),
+
+ O('lungs','ריאות','Lungs','respiratory','שני איברים ספוגיים וגמישים. לימנית שלוש אונות ולשמאלית שתיים – כדי לפנות מקום ללב.','מכניסות חמצן לדם ומוציאות פחמן דו־חמצני דרך מאות מיליוני נאדיות (שקיקי אוויר זעירים).',ENDO+' (הרירית) ומזודרם','שטח הפנים של הנאדיות כ־70 מ״ר – כמו דירה קטנה.','מכניסות חמצן לדם',{soft:1}),
+ O('trachea','קנה הנשימה','Trachea','respiratory','צינור גמיש עם טבעות סחוס בצורת C.','מעביר אוויר מהגרון אל הריאות. ריסים זעירים וריר לוכדים אבק וחיידקים.',ENDO+' (הרירית)','הטבעות מונעות מהקנה להתמוטט כשאנחנו שואפים.','צינור האוויר אל הריאות'),
+
+ O('esophagus','ושט','Esophagus','digestive','צינור שרירי באורך כ־25 ס״מ מהגרון אל הקיבה.','דוחף את המזון כלפי מטה בתנועות גל (פריסטלטיקה) – אפילו כשעומדים על הראש.',ENDO+' (הרירית)','בגלל תנועות הגל אפשר לבלוע גם בהיפוך.','צינור שמעביר מזון מהפה לקיבה'),
+ O('stomach','קיבה','Stomach','digestive','שק שרירי שיכול להתרחב ולהכיל בערך ליטר.','מערבלת את המזון עם חומצה ואנזימים והופכת אותו לעיסה נוזלית.',ENDO+' (הרירית)','הרירית מתחדשת כל כמה ימים, אחרת החומצה הייתה מעכלת את הקיבה עצמה.','מערבלת מזון עם חומצה'),
+ O('liver','כבד','Liver','digestive','האיבר הפנימי הגדול ביותר, כ־1.5 ק״ג.','מסנן רעלים, מייצר מרה לעיכול שומנים, אוגר סוכר וויטמינים ומייצר חלבונים בדם.',ENDO,'הכבד יכול להתחדש: גם אחרי הסרת חלק ממנו הוא גדל בחזרה.','מסנן רעלים ומייצר מרה'),
+ O('gallbladder','כיס מרה','Gallbladder','digestive','שק קטן בצורת אגס מתחת לכבד.','אוגר את המרה ומשחרר אותה למעי כשאוכלים שומנים.',ENDO,'אפשר לחיות בלי כיס מרה – הכבד מזרים מרה ישירות למעי.','אוגר מרה'),
+ O('smallint','מעי דק','Small intestine','digestive','צינור מפותל באורך של כמה מטרים (3 עד 6).','כאן מתבצע רוב העיכול, ורוב החומרים המזינים נספגים לדם דרך מיליוני בליטות זעירות (סיסים).',ENDO+' (הרירית)','הסיסים מגדילים את שטח הפנים של המעי לכ־30 מ״ר.','כאן נספגים רוב החומרים המזינים'),
+ O('largeint','מעי גס','Large intestine','digestive','צינור רחב וקצר יותר (כ־1.5 מטר) שמקיף את המעי הדק. כולל גם את התוספתן.','סופג מים ומלחים, ומכיל חיידקים ידידותיים שעוזרים בעיכול ומייצרים ויטמינים.',ENDO+' (הרירית)','בגוף חיים טריליוני חיידקים, בעיקר במעי הגס – "המיקרוביום".','סופג מים ומכיל חיידקים ידידותיים'),
+
+ O('brain','מוח','Brain','nervous','מרכז הבקרה של הגוף, כ־1.3 ק״ג, עם כ־86 מיליארד תאי עצב.','חושב, זוכר, מרגיש, ומנהל נשימה, דופק ותנועה.',ECTO+' – צינור העצב','המוח הוא כ־2% ממשקל הגוף, אך צורך כ־20% מהאנרגיה.','מרכז הבקרה של הגוף'),
+ O('cord','חוט השדרה','Spinal cord','nervous','אגד עבה של עצבים באורך כ־45 ס״מ שעובר בתוך עמוד השדרה.','מעביר מסרים בין המוח לגוף ומפעיל רפלקסים מהירים.',ECTO+' – צינור העצב','ברפלקס (כמו משיכת יד מחום) התגובה מתרחשת בחוט השדרה, עוד לפני שהמוח "מבין" מה קרה.','כביש מהיר של מסרים בין המוח לגוף'),
+ O('nerves','עצבים היקפיים','Peripheral nerves','nervous','כבלים דקים שיוצאים מחוט השדרה אל כל הגוף.','מעבירים תחושות (מגע, חום, כאב) למוח ופקודות תנועה לשרירים.',ECTO,'אותות עצביים נעים במהירות של עד כ־120 מטר בשנייה.','כבלים שמעבירים תחושה ופקודות תנועה'),
+ O('eyes','עיניים','Eyes','nervous','שני כדורים קטנים (כ־2.5 ס״מ) עם עדשה ורשתית.','קולטות אור והופכות אותו לאותות עצביים שהמוח מפרש כתמונה.',ECTO,'התמונה על הרשתית הפוכה, והמוח הופך אותה חזרה.','קולטות אור ויוצרות ראייה'),
+
+ O('kidneys','כליות','Kidneys','urinary','שני איברים בצורת שעועית, בגודל אגרוף, בגב התחתון.','מסננות את הדם (כ־180 ליטר ביום!), מוציאות פסולת ומים עודפים כשתן, ומווסתות מלחים ולחץ דם.',MESO,'אפשר לחיות עם כליה אחת בריאה.','מסננות את הדם ומייצרות שתן'),
+ O('ureters','שופכנים','Ureters','urinary','שני צינורות דקים (כ־25–30 ס״מ), אחד מכל כליה לשלפוחית.','מזרימים שתן אל השלפוחית בעזרת התכווצויות גל.',MESO,'הם פועלים גם כשאנחנו שוכבים, בלי קשר לכוח המשיכה.','צינורות מהכליות לשלפוחית'),
+ O('bladder','שלפוחית השתן','Bladder','urinary','שק שרירי גמיש שמתנפח ככל שהוא מתמלא.','אוגרת שתן עד שמחליטים להתרוקן.',ENDO+' (הרירית) ומזודרם','היא יכולה להכיל כ־400–600 מ״ל, אך הצורך להתרוקן מורגש כבר בכ־200 מ״ל.','אוגרת שתן'),
+
+ O('thyroid','בלוטת התריס','Thyroid','endocrine','בלוטה בצורת פרפר בצוואר, מתחת לתפוח האדם.','מפרישה הורמונים שקובעים את קצב חילוף החומרים – כמה מהר הגוף משתמש באנרגיה.',ENDO,'היא זקוקה ליוד, ולכן מוסיפים יוד למלח בחלק מהמדינות.','בלוטה בצורת פרפר שקובעת את קצב חילוף החומרים'),
+ O('pancreas','לבלב','Pancreas','endocrine','איבר מוארך מאחורי הקיבה. הוא גם בלוטת הורמונים וגם חלק ממערכת העיכול.','מפריש אינסולין (מוריד סוכר בדם) ואנזימי עיכול למעי.',ENDO,'כשהלבלב לא מייצר מספיק אינסולין, נוצרת סוכרת מסוג 1.','מייצר אינסולין',{amb:1}),
+ O('adrenals','יותרות הכליה','Adrenal glands','endocrine','שתי בלוטות קטנות שיושבות כמו כובע על כל כליה.','מפרישות אדרנלין וקורטיזול – הורמוני "הילחם או ברח" והתמודדות עם לחץ.',MESO+' (החלק החיצוני) ו'+ECTO.split(' ')[0]+' (החלק הפנימי)','האדרנלין מאיץ את הדופק תוך שניות.','מפרישות אדרנלין'),
+
+ O('spleen','טחול','Spleen','immune','איבר בגודל אגרוף בצד שמאל של הבטן, מאחורי הקיבה.','מסנן דם ישן, מפעיל תאי חיסון ואוגר תאי דם.',MESO,'אפשר לחיות בלי טחול, אך הסיכון לזיהומים עולה.','מסנן את הדם ומסייע לחיסון'),
+ O('thymus','תימוס','Thymus','immune','בלוטה קטנה מאחורי עצם החזה, גדולה יחסית בילדים.','בית ספר של תאי חיסון מסוג T: כאן הם לומדים להבדיל בין תאי הגוף למזיקים.',ENDO,'אחרי גיל ההתבגרות התימוס מתכווץ והופך בעיקר לשומן.','בית הספר של תאי חיסון מסוג T'),
+ O('lymph','בלוטות לימפה','Lymph nodes','immune','גושים קטנים בצורת שעועית בצוואר, בבית השחי ובמפשעה. בגוף כ־600.','מסננות את נוזל הלימפה ולוכדות חיידקים. כשיש זיהום הן מתנפחות.',MESO,'כשהגרון כואב והצוואר "מתנפח" – אלה בלוטות הלימפה שעובדות.','מסננות ומתנפחות בזמן זיהום')
+];
+/* ---- new system + organs ---- */
+SYSTEMS.reproductive={he:`מערכת הרבייה`,color:'#ff5fa2',sum:`המערכת שמאפשרת ליצור חיים חדשים. אצל נשים היא כוללת שחלות (שמייצרות ביציות והורמונים) ורחם (שבו עובר מתפתח); אצל גברים היא כוללת אשכים (שמייצרים זרע והורמונים) וערמונית. בחרו "אישה" או "גבר" בלשונית חקר כדי לראות את האיברים המתאימים.`,fact:`זו המערכת היחידה שלא חיונית להישרדות של האדם עצמו, אלא להמשך המין.`,origin:`מזודרם בעיקר. בשבועות הראשונים לעובר המבנים זהים אצל כולם, ורק בהמשך הם מתפתחים לכיוון נשי או גברי.`};
+SYS_ORDER.push('reproductive');
+const NEW_ORG=[
+ {id:'teeth',he:`שיניים`,en:`Teeth`,sys:'digestive',desc:`מבנים קשים שמכוסים באמייל – החומר הקשה ביותר בגוף. לילד יש 20 שיני חלב, ולמבוגר 32 שיניים.`,fn:`חותכות, קורעות וטוחנות מזון לחתיכות קטנות, כדי שיהיה קל יותר לעכל אותו.`,origin:`אקטודרם: האמייל מרירית הפה, והשאר מתאי ציצת העצב.`,fact:`האמייל הוא החומר הקשה ביותר בגוף, אבל הוא לא מתחדש – לכן חשוב לצחצח.`,hint:`חותכות וטוחנות מזון`},
+ {id:'tongue',he:`לשון`,en:`Tongue`,sys:'digestive',desc:`איבר שרירי וגמיש, מכוסה ברירית שמלאה בניצני טעם.`,fn:`מערבבת את המזון עם הרוק, דוחפת אותו לבליעה, מאפשרת לטעום ולדבר.`,origin:`השריר ממזודרם; הרירית משכבות העובר החיצונית והפנימית.`,fact:`הלשון מורכבת מכמה שרירים שמאפשרים לה לנוע לכל כיוון, ולכן היא גם חשובה לדיבור.`,hint:`שריר שמערבב מזון ומאפשר לטעום`},
+ {id:'pharynx',he:`לוע (גרון)`,en:`Pharynx (throat)`,sys:'digestive',amb:1,desc:`צינור שרירי באורך כ־12 ס״מ מאחורי האף והפה, שבו נפגשים דרך האוויר ודרך המזון.`,fn:`מעביר אוויר לקנה הנשימה ומזון לושט. בזמן בליעה, מכסה סחוסי (אפיגלוטיס) סוגר את קנה הנשימה כדי שלא נחנק.`,origin:`אנדודרם (הרירית) ומזודרם (השריר).`,fact:`אי אפשר לנשום ולבלוע באותו רגע – הגוף מתאם את זה אוטומטית.`,hint:`הצומת בגרון שבו נפגשים אוויר ומזון`},
+ {id:'uterus',he:`רחם`,en:`Uterus`,sys:'reproductive',sex:'f',desc:`איבר שרירי חלול בצורת אגס הפוך, באגן, מאחורי שלפוחית השתן.`,fn:`המקום שבו עובר מתפתח בהיריון. הדופן השרירית מתכווצת בלידה, והרירית הפנימית מתחדשת בכל מחזור חודשי.`,origin:`מזודרם (מצינורות עובריים הנקראים צינורות מילר).`,fact:`מחוץ להיריון הרחם קטן, בגודל אגס, ובמהלך ההיריון הוא גדל פי כמה.`,hint:`המקום שבו עובר מתפתח`},
+ {id:'ovaries',he:`שחלות`,en:`Ovaries`,sys:'reproductive',sex:'f',desc:`שני איברים בגודל שקד משני צדי הרחם, המחוברים אליו בצינורות דקים (החצוצרות).`,fn:`מייצרות ביציות ואת ההורמונים אסטרוגן ופרוגסטרון.`,origin:`מזודרם. תאי הנבט, שיהפכו לביציות, נודדים אליהן בשלב מוקדם מאוד של ההתפתחות.`,fact:`בלידה יש בשחלות מיליון ביציות לא בשלות ויותר, אבל רק כמה מאות מהן ישתחררו במהלך החיים.`,hint:`מייצרות ביציות והורמונים`},
+ {id:'testes',he:`אשכים`,en:`Testes`,sys:'reproductive',sex:'m',desc:`שני איברים אליפטיים בתוך שק האשכים, מחוץ לחלל הבטן.`,fn:`מייצרים זרע ואת ההורמון טסטוסטרון.`,origin:`מזודרם. הם מתפתחים בבטן ויורדים לשק האשכים לפני הלידה.`,fact:`האשכים נמצאים מחוץ לגוף כי ייצור זרע דורש טמפרטורה נמוכה בכמה מעלות מטמפרטורת הגוף.`,hint:`מייצרים זרע והורמון טסטוסטרון`},
+ {id:'prostate',he:`ערמונית`,en:`Prostate`,sys:'reproductive',sex:'m',desc:`בלוטה בגודל אגוז מלך, מתחת לשלפוחית השתן, שעוטפת את תחילת השופכה.`,fn:`מפרישה נוזל שהוא חלק מנוזל הזרע, ומזין ומגן על הזרע.`,origin:`אנדודרם (מהרירית של השופכה).`,fact:`הערמונית ממשיכה לגדול לאט במהלך החיים.`,hint:`בלוטה מתחת לשלפוחית השתן`}
+];
+NEW_ORG.forEach(x=>ORGANS.push(O(x.id,x.he,x.en,x.sys,x.desc,x.fn,x.origin,x.fact,x.hint,{sex:x.sex,amb:x.amb})));
+
+const DEEP_HE={
+ heart:{deep:`הלב מחולק לשני צדדים: הימני שולח דם דל בחמצן לריאות, והשמאלי שולח דם עשיר בחמצן לכל הגוף. שסתומים בין החללים מבטיחים שהדם זורם רק בכיוון אחד – הצליל "לאב־דאב" הוא סגירת השסתומים.`,adv:`הפעימה מתחילה בצומת הסינוס, "קוצב" טבעי בפרוזדור הימני, ששולח אות חשמלי שמתפשט בשריר ומתאם את ההתכווצות. הלב עצמו מקבל דם דרך עורקי הכלילית; חסימה שלהם גורמת להתקף לב.`},
+ lungs:{deep:`האוויר עובר בקנה, מתפצל לסימפונות ולבסוף מגיע לנאדיות. דופן הנאדיות ונימי הדם דקים מאוד, ולכן חמצן ופחמן דו־חמצני עוברים ביניהם בדיפוזיה – מאזור ריכוז גבוה לנמוך.`,adv:`הנאדיות מצופות בחומר בשם סורפקטנט שמפחית מתח פני שטח ומונע את קריסתן בנשיפה. הנשימה נשלטת על ידי מרכז הנשימה בגזע המוח, שמגיב בעיקר לרמת הפחמן הדו־חמצני בדם.`},
+ brain:{deep:`המוח מחולק לאזורים: קליפת המוח (חשיבה, תחושה ותנועה רצונית), המוחון (איזון ותיאום) וגזע המוח (נשימה ודופק). שני חצאי הכדור מחוברים בגשר של סיבים.`,adv:`תאי עצב מתקשרים בסינפסות בעזרת מוליכים עצביים כמו דופמין וסרוטונין. מחסום דם־מוח מגביל אילו חומרים עוברים מהדם אל המוח.`},
+ liver:{deep:`הדם מהמעיים מגיע לכבד דרך וריד השער, כך שהכבד "בודק" כל מה שנספג לפני שהוא מגיע לשאר הגוף.`,adv:`הכבד מבצע מאות תפקידים: מפרק תרופות ואלכוהול, הופך אמוניה לשתנן, מייצר אלבומין וגורמי קרישה, ואוגר גליקוגן (סוכר מאוחסן).`},
+ kidneys:{deep:`יחידת הסינון הבסיסית היא הנפרון: הדם מסונן בכדור נימים (גלומרולוס), והגוף מחזיר את רוב המים והחומרים החשובים. בכל כליה כמיליון נפרונים.`,adv:`הכליות מפרישות גם אריתרופואטין (מעורר ייצור כדוריות דם אדומות) ורנין (מווסת לחץ דם), ומפעילות ויטמין D.`},
+ stomach:{deep:`תאי הקיבה מפרישים חומצת מלח, אנזים לפירוק חלבונים (פפסין) וריר מגן. החומציות גם הורגת חלק מהחיידקים שנכנסו עם האוכל.`,adv:`הקיבה מפרישה גם "גורם פנימי", שנחוץ לספיגת ויטמין B12 במעי. הפרשת החומצה מווסתת על ידי ההורמון גסטרין ועל ידי עצב הוואגוס.`},
+ smallint:{deep:`המעי הדק מחולק לשלושה חלקים: התריסריון (כאן מתערבבים מרה ואנזימי הלבלב), הג׳חנון והמעי העקום, שבהם נספגים רוב החומרים.`,adv:`סוכרים וחומצות אמינו נספגים לנימי דם ומגיעים לכבד דרך וריד השער, ואילו שומנים נספגים בעיקר לכלי לימפה זעירים בתוך הסיסים.`},
+ pancreas:{deep:`רוב הלבלב מייצר אנזימי עיכול. אזורים קטנים בתוכו, "איי לנגרהנס", מייצרים הורמונים.`,adv:`תאי בטא מפרישים אינסולין (מוריד סוכר בדם) ותאי אלפא מפרישים גלוקגון (מעלה סוכר בדם). שני ההורמונים פועלים בניגוד ושומרים על איזון.`},
+ thyroid:{deep:`ההורמונים של בלוטת התריס, תירוקסין (T4) וטריודוטירונין (T3), משפיעים על כמעט כל תא בגוף: על קצב הלב, חום הגוף והצמיחה.`,adv:`ההפרשה מווסתת בלולאת משוב: כשרמת ההורמון בדם נמוכה, ההיפופיזה מפרישה TSH ובלוטת התריס מגיבה.`},
+ spleen:{deep:`בטחול יש "עיסה אדומה" שמסננת דם ישן, ו"עיסה לבנה" שבה יושבים תאי חיסון.`,adv:`הטחול מסלק כדוריות דם אדומות ישנות ומחזיר את הברזל מהן לשימוש חוזר.`},
+ spine:{deep:`עמוד השדרה מחולק לצוואר (7 חוליות), חזה (12), מותן (5), עצה וזנב (חוליות מחוברות).`,adv:`בין החוליות יוצאים 31 זוגות עצבי שדרה. פגיעה בחוט השדרה בגובה מסוים משפיעה על התחושה והתנועה מתחת לאותו גובה.`}
+};
+const NEW_ORG2=[
+ {id:'ears',he:`אוזניים`,en:`Ears`,sys:'nervous',desc:`איברי השמיעה והשיווי משקל: אוזן חיצונית (הדלפק שרואים), אוזן תיכונה עם שלוש עצמות זעירות, ואוזן פנימית עם השבלול ותעלות חצי־מעגליות.`,fn:`קולטות גלי קול והופכות אותם לאותות עצביים שהמוח מפרש כצלילים. האוזן הפנימית גם מזהה תנועה ומסייעת לשמור על שיווי משקל.`,origin:`האוזן הפנימית מתפתחת מאקטודרם; האוזן התיכונה והחיצונית מקשתות הלוע העובריות.`,fact:`שלוש עצמות האוזן התיכונה – הפטיש, הסדן והארכובה – הן העצמות הקטנות ביותר בגוף.`,hint:`קולטות קול ומסייעות בשיווי משקל`},
+ {id:'nose',he:`אף`,en:`Nose`,sys:'respiratory',desc:`מבנה חיצוני מסחוס ועצם, ובפנים חלל מרופד ברירית עם שערות וריר.`,fn:`מחמם, מלחלח ומסנן את האוויר שנשאף, ומכיל את קולטני הריח.`,origin:`אקטודרם (הרירית וקולטני הריח) ומזודרם (העצם והסחוס).`,fact:`חלק גדול ממה שנראה לנו כ"טעם" הוא בעצם ריח – לכן אוכל נראה חסר טעם כשיש לנו הצטננות.`,hint:`מסנן ומחמם אוויר ומזהה ריחות`},
+ {id:'larynx',he:`תיבת קול (גרוגרת)`,en:`Larynx (voice box)`,sys:'respiratory',desc:`מבנה סחוסי בצוואר, מעל קנה הנשימה, ובו שני קפלים הנקראים מיתרי קול.`,fn:`כשהאוויר עובר בין מיתרי הקול הם רועדים ויוצרים קול. התיבה גם סוגרת את דרכי הנשימה בזמן בליעה.`,origin:`אנדודרם (הרירית) ומזודרם (הסחוסים והשרירים).`,fact:`"תפוח האדם" הוא החלק הבולט של סחוס התריס בתיבת הקול.`,hint:`כאן נוצר הקול`},
+ {id:'mandible',he:`לסת תחתונה`,en:`Mandible (lower jaw)`,sys:'skeletal',desc:`העצם הגדולה והחזקה ביותר בפנים, והעצם היחידה בגולגולת שנעה בחופשיות.`,fn:`מחזיקה את השיניים התחתונות ומאפשרת ללעוס ולדבר.`,origin:`מתאי ציצת העצב ומזודרם.`,fact:`שרירי הלעיסה נחשבים לחזקים ביותר בגוף ביחס לגודלם.`,hint:`העצם הנעה בפנים`},
+ {id:'salivary',he:`בלוטות רוק`,en:`Salivary glands`,sys:'digestive',amb:1,desc:`שלושה זוגות בלוטות בפה ובלחיים (פרוטיד, תת־לסתית ותת־לשונית).`,fn:`מייצרות רוק – בערך ליטר עד ליטר וחצי ביום – שלח את המזון, מתחיל לפרק עמילן ומגן על השיניים.`,origin:`מרירית הפה העוברית.`,fact:`הריח של אוכל, או אפילו מחשבה עליו, מספיקים כדי להפעיל אותן.`,hint:`מייצרות רוק`}
+];
+NEW_ORG2.forEach(x=>ORGANS.push(O(x.id,x.he,x.en,x.sys,x.desc,x.fn,x.origin,x.fact,x.hint,{amb:x.amb})));
+const LAYER={};
+ORGANS.forEach(o=>{if(o.sys==='skeletal'||o.sys==='muscular')LAYER[o.id]='meso';});
+['heart','arteries','veins','kidneys','ureters','spleen','lymph','uterus','ovaries','testes'].forEach(i=>LAYER[i]='meso');
+['brain','cord','nerves','eyes'].forEach(i=>LAYER[i]='ecto');
+delete LAYER.skull;delete LAYER.mandible;
+['liver','gallbladder','thyroid','pancreas','thymus'].forEach(i=>LAYER[i]='endo');
+const ORG={}; ORGANS.forEach(o=>{ORG[o.id]=o;o.meshes=[];o.mats={};o.cur=1;});
+
+const ACTIVITIES=[
+ {id:'sleep',he:'שינה',bpm:55,br:12,txt:'בשינה הגוף חוסך אנרגיה: הלב והנשימה איטיים, והמוח מסדר זיכרונות.'},
+ {id:'rest',he:'מנוחה',bpm:72,br:14,txt:'במנוחה הלב פועם כ־60–100 פעמים בדקה ונושמים בערך 12–16 נשימות בדקה.'},
+ {id:'walk',he:'הליכה',bpm:98,br:20,txt:'בהליכה השרירים צורכים יותר חמצן, אז הלב והריאות מתעדכנים ועובדים קצת מהר יותר.'},
+ {id:'run',he:'ריצה',bpm:160,br:38,txt:'בריצה השרירים דורשים הרבה חמצן. הלב פועם מהר ושואב יותר דם, ונושמים עמוק ומהר כדי לספק חמצן ולהוציא פחמן דו־חמצני.'},
+ {id:'fear',he:'בהלה',bpm:135,br:30,txt:'בהלה מפעילה את יותרות הכליה: אדרנלין מאיץ את הדופק והנשימה כדי להכין את הגוף להילחם או לברוח.'}
+];
+
+const FACTS=[
+ 'גוף מבוגר מכיל כ־37 טריליון תאים (הערכה מדעית).',
+ 'כ־60% ממשקל הגוף הוא מים.',
+ 'הלב פועם כ־100,000 פעמים ביום ושואב כ־7,000 ליטר דם.',
+ 'בגוף מבוגר יש 206 עצמות ויותר מ־600 שרירים.',
+ 'העור הוא האיבר הגדול ביותר, ומשקלו כ־3–4 ק״ג.',
+ 'המוח צורך כ־20% מהאנרגיה של הגוף, אף שהוא רק כ־2% מהמשקל.',
+ 'תאי דם אדומים חיים כ־120 ימים, ויוצרים כ־2 מיליון חדשים בכל שנייה.',
+ 'המזון נע בצינור העיכול בערך 1–3 ימים מהפה ועד היציאה.',
+ 'אנחנו נושמים כ־20,000 פעמים ביום.',
+ 'עצם הירך היא העצם הארוכה והחזקה ביותר בגוף.'
+];
+/* ===================== ENGLISH CONTENT ===================== */
+const EM='Mesoderm (middle embryonic layer)',EE='Endoderm (inner embryonic layer)',EC='Ectoderm (outer embryonic layer)';
+const EN_ORG={};
+function E(id,d,f,o,x,h){EN_ORG[id]={desc:d,fn:f,origin:o,fact:x,hint:h};}
+E('skull','A hard bony case that surrounds the brain and shapes the face. It is made of 22 bones joined by seams called sutures.','Protects the brain, eyes and ears, and its movable jaw lets you chew.','Mostly mesoderm, plus neural crest cells.',"A baby's skull bones are not fully fused yet, so the head can squeeze through birth and keep growing.",'Protects the brain like a helmet');
+E('spine','A stack of 33 vertebrae (24 of them movable) with soft discs in between.','Supports the body, lets you bend and twist, and protects the spinal cord.',EM,'You are about a centimetre taller in the morning than at night, because the discs compress during the day.','Supports the body and shields the spinal cord');
+E('ribs','Twelve pairs of ribs that form a cage around the heart and lungs.','Protects the heart and lungs, and moves as you breathe.',EM,'The lowest ribs are called "floating ribs" because they do not attach to the breastbone.','A cage that protects the heart and lungs');
+E('sternum','A flat bone in the middle of the chest where most ribs connect.','Holds the rib cage together at the front and shields the heart.',EM,'It is full of blood-making bone marrow, so doctors sometimes sample marrow from it.','Flat bone in the chest that shields the heart');
+E('clavicle','A thin, horizontal bone between the breastbone and the shoulder.','Works like a strut: it keeps the shoulder away from the body so the arm can move freely.',EM,'It is one of the bones most often broken in falls.','A strut between the chest and the shoulder');
+E('humerus','A long bone in the upper arm, between the shoulder and the elbow.','Acts as a lever that muscles pull on to move the arm.',EM,'The "funny bone" tingle is actually a nerve passing close to the skin at the elbow.','The long bone of the upper arm');
+E('forearm','Two bones (radius and ulna) between the elbow and the wrist.','Let you rotate your hand palm-up and palm-down.',EM,'When you turn your palm over, the two bones cross each other.','Two bones between the elbow and the hand');
+E('hand','27 small bones: the wrist, palm and fingers.','Allow precise grip and the use of tools.',EM,'Your two hands together hold about a quarter of all the bones in your body.','27 bones that allow grip');
+E('pelvis','A wide ring of bone at the base of the spine.','Carries the weight of the upper body, protects organs in the lower abdomen and connects the legs to the trunk.',EM,'The pelvis is one of the clearest differences between male and female skeletons.','A bony ring that connects the legs to the body');
+E('femur','The longest, strongest and heaviest bone in the body.','Carries the body\'s weight and makes walking and running possible.',EM,'It is about a quarter of your total height.','The longest, strongest bone in the body');
+E('tibia','The lower leg has two bones: the tibia (thick) and the fibula (thin).','The tibia carries most of the weight; the fibula steadies the ankle.',EM,'The tibia is the second-largest bone in the body.','Thick shin bone below the knee that bears weight');
+E('foot','26 bones arranged in arches.','Act like a spring: they absorb shock when you walk and push you forward.',EM,'Your two feet together hold about a quarter of the body\'s bones.','26 bones with a springy arch');
+E('pectoral','A large, flat muscle in the upper chest.','Pulls the arm inward and rotates it, as in pushing or hugging.',EM,'Muscles work in pairs: one pulls, the other pulls back.','Pulls the arm forward, like a hug');
+E('deltoid','A triangular muscle that wraps around the shoulder.','Lifts the arm out to the side and forward.',EM,'Its name comes from the Greek letter delta (Δ), because of its shape.','Lifts the arm sideways');
+E('biceps','A muscle on the front of the upper arm with two "heads".','Bends the elbow and turns the palm up.',EM,'"Biceps" is Latin for "two-headed".','Bends the elbow');
+E('abs','Long muscles divided into "blocks" by bands of tissue.','Bend the body forward and steady the trunk.',EM,'Everyone has the "six-pack" blocks; most people just have a layer of fat over them.','The "six-pack" that bends the trunk forward');
+E('quads','A group of four muscles on the front of the thigh.','Straighten the knee, which is vital for walking, running and jumping.',EM,'One of the biggest and strongest muscle groups in the body.','Straightens the knee');
+E('calf','The bulging muscle at the back of the lower leg.','Lifts the heel and pushes the body forward when you walk.',EM,'It attaches to the heel by the Achilles tendon, the thickest and strongest tendon in the body.','Lifts the heel');
+E('diaphragm','A broad, dome-shaped muscle between the chest and the abdomen.','When it contracts it flattens, the chest expands and air is drawn into the lungs. It is the main engine of breathing.',EM,'Hiccups are sudden, involuntary contractions of the diaphragm.','Dome-shaped muscle that powers breathing');
+E('heart','A strong, fist-sized muscle with four chambers: two atria and two ventricles. It sits in the middle of the chest, tilted slightly to the left.','Pumps blood around the body without a break – about 100,000 beats a day.',EM,'The heart starts beating within the first weeks of pregnancy, long before birth.','A muscular pump that moves blood around the body');
+E('arteries','Thick-walled tubes that carry oxygen-rich blood (bright red) away from the heart. The largest is the aorta.','Deliver oxygen and nutrients to every organ. The pulse you feel is an artery stretching with each heartbeat.',EM,'The aorta is about as wide as a garden hose.','Tubes that carry oxygen-rich blood from the heart');
+E('veins','Thin-walled blood vessels with valves that carry oxygen-poor blood back to the heart (shown in blue).','Return blood to the heart; tiny valves stop it from flowing backwards.',EM,'All your blood vessels laid end to end are estimated to be about 100,000 km long – over twice around the Earth.','Carry oxygen-poor blood back to the heart');
+E('lungs','Two soft, spongy organs. The right has three lobes and the left has two, to leave room for the heart.','Bring oxygen into the blood and remove carbon dioxide through hundreds of millions of tiny air sacs (alveoli).','Endoderm (lining) and mesoderm','The surface area of the alveoli is around 70 m² – like a small apartment.','Bring oxygen into the blood');
+E('trachea','A flexible tube reinforced with C-shaped rings of cartilage.','Carries air from the throat to the lungs. Tiny hairs and mucus trap dust and germs.','Endoderm (lining) and mesoderm','The rings keep the windpipe from collapsing when you breathe in.','The windpipe that leads to the lungs');
+E('esophagus','A muscular tube about 25 cm long from the throat to the stomach.','Pushes food downward in waves (peristalsis) – even if you stand on your head.','Endoderm (lining) and mesoderm','Because of these waves, you can swallow upside down.','Tube that carries food from the mouth to the stomach');
+E('stomach','A muscular sack that can stretch to hold about a litre.','Churns food with acid and enzymes into a liquid paste.','Endoderm (lining) and mesoderm','The stomach lining renews itself every few days, or the acid would digest the stomach itself.','Churns food with acid');
+E('liver','The largest internal organ, around 1.5 kg.','Filters toxins, makes bile to digest fats, stores sugar and vitamins and makes blood proteins.',EE,'The liver can regenerate: even after part of it is removed, it grows back.','Filters toxins and makes bile');
+E('gallbladder','A small pear-shaped sack under the liver.','Stores bile and releases it into the intestine when you eat fats.',EE,'You can live without a gallbladder – the liver sends bile straight to the intestine.','Stores bile');
+E('smallint','A coiled tube several metres long (3 to 6 m).','Most digestion happens here, and most nutrients are absorbed into the blood through millions of tiny finger-like villi.','Endoderm (lining) and mesoderm','The villi increase the intestine\'s inner surface to around 30 m².','Where most nutrients are absorbed');
+E('largeint','A wider, shorter tube (about 1.5 m) that frames the small intestine. It also includes the appendix.','Absorbs water and salts, and houses friendly bacteria that help digestion and make vitamins.','Endoderm (lining) and mesoderm','Trillions of bacteria – the "microbiome" – live in your body, mostly in the large intestine.','Absorbs water and hosts friendly bacteria');
+E('brain','The control centre of the body: about 1.3 kg with roughly 86 billion nerve cells.','Thinks, remembers, feels, and manages breathing, heartbeat and movement.',EC+' – neural tube','The brain is about 2% of body weight but uses around 20% of its energy.','The control centre of the body');
+E('cord','A thick bundle of nerves about 45 cm long, running inside the spine.','Carries messages between the brain and the body and runs quick reflexes.',EC+' – neural tube','In a reflex (like pulling your hand from heat), the reaction happens in the spinal cord before your brain "knows" what happened.','A highway for messages between brain and body');
+E('nerves','Thin cables that branch out from the spinal cord to the whole body.','Send sensations (touch, heat, pain) to the brain and movement commands to the muscles.',EC,'Nerve signals travel at up to about 120 metres per second.','Cables that carry sensation and movement commands');
+E('eyes','Two small balls (about 2.5 cm) with a lens and a retina.','Catch light and turn it into nerve signals that the brain reads as an image.',EC,'The image on the retina is upside down, and the brain flips it back.','Catch light so you can see');
+E('kidneys','Two bean-shaped, fist-sized organs in the lower back.','Filter the blood (about 180 litres a day!), remove waste and extra water as urine, and regulate salts and blood pressure.',EM,'You can live a healthy life with just one kidney.','Filter blood and make urine');
+E('ureters','Two thin tubes (about 25–30 cm), one from each kidney to the bladder.','Move urine to the bladder with wave-like contractions.',EM,'They work even when you lie down, independent of gravity.','Tubes from the kidneys to the bladder');
+E('bladder','A flexible, muscular sack that stretches as it fills.','Stores urine until you choose to empty it.','Endoderm (lining) and mesoderm','It holds about 400–600 ml, but you start feeling the urge at around 200 ml.','Stores urine');
+E('thyroid','A butterfly-shaped gland in the neck, below the Adam\'s apple.','Releases hormones that set your metabolic rate – how fast the body uses energy.',EE,'It needs iodine, which is why some countries add iodine to table salt.','Butterfly-shaped gland that sets metabolism');
+E('pancreas','A long organ behind the stomach. It is both a hormone gland and part of the digestive system.','Releases insulin (lowers blood sugar) and digestive enzymes into the intestine.',EE,'When the pancreas makes too little insulin, the result is type 1 diabetes.','Makes insulin');
+E('adrenals','Two small glands that sit like caps on top of the kidneys.','Release adrenaline and cortisol – the "fight or flight" and stress hormones.','Mesoderm (outer part) and ectoderm (inner part)','Adrenaline can speed up your heart within seconds.','Release adrenaline');
+E('spleen','A fist-sized organ on the left side of the abdomen, behind the stomach.','Filters old blood, activates immune cells and stores blood cells.',EM,'You can live without a spleen, but the risk of infections goes up.','Filters blood and supports immunity');
+E('thymus','A small gland behind the breastbone, relatively large in children.','A "school" for T immune cells: this is where they learn to tell body cells from invaders.',EE,'After puberty the thymus shrinks and turns mostly to fat.','The school for T immune cells');
+E('lymph','Small bean-shaped lumps in the neck, armpits and groin. There are about 600 in the body.','Filter lymph fluid and trap germs. They swell when you have an infection.',EM,'When your throat hurts and your neck "swells", those are lymph nodes at work.','Filter fluid and swell during infection');
+
+const EN_SYS={
+ skin:{sum:'The skin is the body\'s largest organ (about 2 m²). It wraps and protects against germs, water and injury, controls temperature by sweating, and holds nerve endings that sense touch, heat and pain.',fact:'Skin renews itself every 4–6 weeks, and you shed thousands of skin cells every minute.',origin:'The outer skin comes from ectoderm, the deeper layer from mesoderm.'},
+ skeletal:{sum:'An adult skeleton has 206 bones (a baby has about 300, some of which fuse over time). It gives the body shape, protects soft organs, allows movement together with muscles, stores calcium and makes blood cells in the bone marrow.',fact:'Bone is living tissue: it renews itself and heals after a fracture.',origin:'Develops mainly from mesoderm.'},
+ muscular:{sum:'The body has over 600 muscles. Skeletal muscles are controlled voluntarily and move the bones; smooth muscles (in the gut and blood vessels) and heart muscle work on their own.',fact:'Muscles can only pull, not push, so they work in opposing pairs.',origin:'Mesoderm.'},
+ circulatory:{sum:'The heart and blood vessels form a closed network that carries oxygen, nutrients, hormones and immune cells to every cell and collects waste. An adult has about 5 litres of blood.',fact:'At rest, a blood cell completes a full trip around the body in about a minute.',origin:'The heart and vessels are the first organs to work in the embryo – mesoderm.'},
+ respiratory:{sum:'The nose, windpipe and lungs bring oxygen into the blood and remove carbon dioxide. The exchange happens in tiny air sacs (alveoli) wrapped in capillaries.',fact:'We breathe about 20,000 times a day without thinking about it.',origin:'The inner lining comes from endoderm; muscle and cartilage from mesoderm.'},
+ digestive:{sum:'A long tube from mouth to anus, helped by the liver, gallbladder and pancreas. Food is broken down into small molecules that enter the blood, and the leftovers are removed.',fact:'Food takes about 1–3 days to travel through the whole digestive tract.',origin:'The lining comes from endoderm (inner layer); the muscle from mesoderm.'},
+ nervous:{sum:'The body\'s communication and control system. The brain and spinal cord (central system) process information, and peripheral nerves carry signals between organs and the brain. It also includes sense organs such as the eyes.',fact:'The brain has about 86 billion nerve cells, each connected to thousands of others.',origin:'Ectoderm – the outer layer folds into the "neural tube".'},
+ urinary:{sum:'The kidneys filter the blood and make urine; the ureters carry it to the bladder, and from there it leaves the body. The system balances water and salts and helps control blood pressure.',fact:'All the blood in your body passes through the kidneys dozens of times a day.',origin:'Mesoderm.'},
+ endocrine:{sum:'Glands that release hormones – chemical messengers that travel in the blood and affect growth, energy, mood, blood sugar and more. In this model: the thyroid, pancreas and adrenal glands.',fact:'A tiny amount of hormone in the blood can affect the whole body.',origin:'Varies by gland: endoderm, mesoderm and ectoderm.'},
+ immune:{sum:'An army of cells, organs and vessels that recognises and destroys germs and damaged cells, and remembers them for next time. Lymph is a fluid collected from tissues and filtered in nodes.',fact:'Vaccines "teach" this system to recognise a germ before you ever meet it.',origin:'Mainly mesoderm; the thymus is from endoderm.'}
+};
+E('teeth','Hard structures coated in enamel, the hardest material in the body. A child has 20 baby teeth and an adult has 32 teeth.','Cut, tear and grind food into small pieces so it is easier to digest.','Ectoderm: the enamel from the lining of the mouth, the rest from neural crest cells.','Enamel is the hardest substance in the body, but it cannot regrow – which is why brushing matters.','Cut and grind food');
+E('tongue','A flexible muscular organ covered in a lining full of taste buds.','Mixes food with saliva, pushes it back to be swallowed, and lets you taste and speak.','The muscle comes from mesoderm; the lining from the outer and inner embryonic layers.','The tongue is made of several muscles that let it move in every direction, which is also why it matters for speech.','A muscle that mixes food and lets you taste');
+E('pharynx','A muscular tube about 12 cm long behind the nose and mouth, where the air route and the food route cross.','Sends air to the windpipe and food to the esophagus. When you swallow, a cartilage flap (the epiglottis) closes the windpipe so you do not choke.','Endoderm (lining) and mesoderm (muscle).','You cannot breathe and swallow at the same instant – the body coordinates it automatically.','The junction in the throat where air and food cross');
+E('uterus','A hollow, muscular, upside-down pear-shaped organ in the pelvis, behind the bladder.','The place where an embryo develops during pregnancy. Its muscular wall contracts during birth, and its inner lining renews every menstrual cycle.','Mesoderm (from embryonic tubes called the Müllerian ducts).','Outside pregnancy the uterus is small, about the size of a pear, and it grows many times larger during pregnancy.','Where an embryo develops');
+E('ovaries','Two almond-sized organs on either side of the uterus, linked to it by thin tubes (the fallopian tubes).','Make egg cells and the hormones estrogen and progesterone.','Mesoderm. The germ cells that become eggs migrate into them very early in development.','At birth the ovaries hold a million or more immature eggs, but only a few hundred will ever be released.','Make egg cells and hormones');
+E('testes','Two oval organs inside the scrotum, outside the abdominal cavity.','Make sperm and the hormone testosterone.','Mesoderm. They develop in the abdomen and descend into the scrotum before birth.','The testes sit outside the body because making sperm needs a temperature a few degrees below body temperature.','Make sperm and testosterone');
+E('prostate','A walnut-sized gland below the bladder that wraps around the start of the urethra.','Releases a fluid that forms part of semen, nourishing and protecting sperm.','Endoderm (from the lining of the urethra).','The prostate keeps growing slowly throughout life.','A gland below the bladder');
+const EN_DEEP={
+ heart:{deep:'The heart has two sides: the right sends oxygen-poor blood to the lungs, the left sends oxygen-rich blood to the whole body. Valves between the chambers make sure blood flows one way only – the "lub-dub" sound is those valves closing.',adv:'Each beat starts in the sinoatrial node, a natural pacemaker in the right atrium, which sends an electrical signal that spreads through the muscle and coordinates the squeeze. The heart itself is fed by the coronary arteries; a blockage there causes a heart attack.'},
+ lungs:{deep:'Air passes down the windpipe, splits into bronchi and finally reaches the alveoli. Alveolar walls and capillaries are extremely thin, so oxygen and carbon dioxide cross between them by diffusion – from high concentration to low.',adv:'Alveoli are coated with surfactant, which lowers surface tension and stops them collapsing when you breathe out. Breathing is controlled by the respiratory centre in the brainstem, which responds mainly to the level of carbon dioxide in the blood.'},
+ brain:{deep:'The brain has regions: the cortex (thinking, sensation, voluntary movement), the cerebellum (balance and coordination) and the brainstem (breathing and heartbeat). The two hemispheres are linked by a bridge of fibres.',adv:'Nerve cells communicate at synapses using neurotransmitters such as dopamine and serotonin. The blood–brain barrier limits which substances pass from blood into the brain.'},
+ liver:{deep:'Blood from the intestines reaches the liver through the portal vein, so the liver "checks" everything that is absorbed before it reaches the rest of the body.',adv:'The liver performs hundreds of jobs: it breaks down drugs and alcohol, converts ammonia to urea, makes albumin and clotting factors, and stores glycogen (stored sugar).'},
+ kidneys:{deep:'The basic filtering unit is the nephron: blood is filtered in a tuft of capillaries (the glomerulus), and the body takes back most of the water and useful substances. Each kidney has about a million nephrons.',adv:'The kidneys also release erythropoietin (which stimulates red blood cell production) and renin (which helps control blood pressure), and activate vitamin D.'},
+ stomach:{deep:'Stomach cells release hydrochloric acid, a protein-digesting enzyme (pepsin) and protective mucus. The acidity also kills some of the germs that arrive with food.',adv:'The stomach also makes "intrinsic factor", needed to absorb vitamin B12 in the intestine. Acid release is regulated by the hormone gastrin and by the vagus nerve.'},
+ smallint:{deep:'The small intestine has three parts: the duodenum (where bile and pancreatic enzymes mix in), the jejunum and the ileum, where most absorption happens.',adv:'Sugars and amino acids are absorbed into blood capillaries and travel to the liver through the portal vein, while fats are absorbed mainly into tiny lymph vessels inside the villi.'},
+ pancreas:{deep:'Most of the pancreas makes digestive enzymes. Small clusters inside it, the "islets of Langerhans", make hormones.',adv:'Beta cells release insulin (lowers blood sugar) and alpha cells release glucagon (raises blood sugar). The two hormones work in opposition to keep balance.'},
+ thyroid:{deep:'Thyroid hormones, thyroxine (T4) and triiodothyronine (T3), affect almost every cell: heart rate, body heat and growth.',adv:'Release is controlled by a feedback loop: when hormone levels in the blood are low, the pituitary releases TSH and the thyroid responds.'},
+ spleen:{deep:'The spleen has "red pulp" that filters old blood and "white pulp" where immune cells live.',adv:'It removes old red blood cells and returns their iron for reuse.'},
+ spine:{deep:'The spine is divided into the neck (7 vertebrae), chest (12), lower back (5), and the sacrum and tailbone (fused vertebrae).',adv:'31 pairs of spinal nerves exit between the vertebrae. Damage to the spinal cord at a given level affects sensation and movement below that level.'}
+};
+EN_SYS.reproductive={sum:'The system that makes new life possible. In women it includes the ovaries (which make eggs and hormones) and the uterus (where an embryo develops); in men it includes the testes (which make sperm and hormones) and the prostate. Choose "Female" or "Male" in the Explore tab to see the matching organs.',fact:'It is the only system not needed for the survival of the person themself, but for the continuation of the species.',origin:'Mostly mesoderm. In the first weeks the structures are identical in every embryo, and only later develop in a female or male direction.'};
+E('ears','The organs of hearing and balance: an outer ear (the flap you see), a middle ear with three tiny bones, and an inner ear with the cochlea and semicircular canals.','Catch sound waves and turn them into nerve signals that the brain reads as sound. The inner ear also senses movement and helps you keep your balance.','The inner ear develops from ectoderm; the middle and outer ear from the embryonic pharyngeal arches.','The three middle-ear bones – hammer, anvil and stirrup – are the smallest bones in the body.','Catch sound and help with balance');
+E('nose','An outer frame of cartilage and bone, with an inside cavity lined with mucus-covered membrane and hairs.','Warms, moistens and filters the air you breathe in, and holds the smell receptors.','Ectoderm (lining and smell receptors) and mesoderm (bone and cartilage).','Much of what we think of as "taste" is really smell – which is why food seems bland when you have a cold.','Filters and warms air and detects smells');
+E('larynx','A cartilage structure in the neck above the windpipe, containing two folds called the vocal cords.','When air passes between the vocal cords they vibrate and make sound. The larynx also closes the airway when you swallow.','Endoderm (lining) and mesoderm (cartilage and muscle).','The "Adam\'s apple" is the prominent part of the thyroid cartilage of the larynx.','Where your voice is made');
+E('mandible','The largest, strongest bone of the face, and the only skull bone that moves freely.','Holds the lower teeth and lets you chew and talk.','From neural crest cells and mesoderm.','The chewing muscles are among the strongest in the body for their size.','The moving bone of the face');
+E('salivary','Three pairs of glands in the mouth and cheeks (parotid, submandibular and sublingual).','Make saliva – roughly one to one and a half litres a day – which moistens food, starts breaking down starch and protects the teeth.','From the embryonic lining of the mouth.','The smell of food, or even thinking about it, is enough to switch them on.','Make saliva');
+const EN_FACTS=[
+ 'An adult body contains about 37 trillion cells (scientific estimate).',
+ 'About 60% of body weight is water.',
+ 'The heart beats about 100,000 times a day and pumps around 7,000 litres of blood.',
+ 'An adult has 206 bones and over 600 muscles.',
+ 'The skin is the largest organ and weighs about 3–4 kg.',
+ 'The brain uses about 20% of the body\'s energy although it is only about 2% of its weight.',
+ 'Red blood cells live about 120 days, and the body makes around 2 million new ones every second.',
+ 'We breathe about 20,000 times a day.',
+ 'The thigh bone (femur) is the longest and strongest bone in the body.',
+ 'Food takes about 1–3 days to pass through the digestive tract.'
+];
+
+/* ===================== UI STRINGS ===================== */
+const STR={
+ he:{
+  app:'אטלס גוף האדם',tagline:'חקרו את הגוף בתלת־ממד',bpmU:'פעימות לדקה',brU:'נשימות לדקה',
+  tExplore:'חקר',tSim:'סימולציה',tQuiz:'חידון',tLearn:'מדריך',
+  search:'חפשו איבר, למשל: כבד',noRes:'לא נמצא איבר כזה',systems:'מערכות הגוף',showAll:'הצג הכל',hideAll:'הסתר הכל',
+  skin:'שקיפות העור',dim:'עמעום שאר האיברים',auto:'סיבוב אוטומטי',reset:'אפס מצלמה',
+  help:'גרירה לסיבוב · גלגלית לזום · Shift+גרירה להזזה',
+  simTitle:'הרצת הגוף',simSub:'בחרו פעילות וראו איך הלב והריאות מגיבים.',
+  act_sleep:'שינה',act_rest:'מנוחה',act_walk:'הליכה',act_run:'ריצה',act_fear:'בהלה',
+  sim_sleep:'בשינה הגוף חוסך אנרגיה: הלב והנשימה איטיים, והמוח מסדר זיכרונות.',
+  sim_rest:'במנוחה הלב פועם כ־60–100 פעמים בדקה ונושמים בערך 12–16 נשימות בדקה.',
+  sim_walk:'בהליכה השרירים צורכים יותר חמצן, אז הלב והריאות עובדים קצת מהר יותר.',
+  sim_run:'בריצה השרירים דורשים הרבה חמצן. הלב פועם מהר ושואב יותר דם, ונושמים עמוק ומהר כדי לספק חמצן ולהוציא פחמן דו־חמצני.',
+  sim_fear:'בהלה מפעילה את יותרות הכליה: אדרנלין מאיץ את הדופק והנשימה כדי להכין את הגוף להילחם או לברוח.',
+  wTitle:'ברוכים הבאים',
+  wP1:'זהו מודל תלת־ממדי של גוף האדם. <b>לחצו על כל איבר</b> כדי ללמוד מה הוא עושה ומאיפה הוא בא.',
+  wP2:'בלשונית "חקר" אפשר להדליק ולכבות מערכות ולחפש איברים. ב"סימולציה" רואים איך הלב והריאות מגיבים לפעילות.',
+  wP3:'השרירים כבויים כברירת מחדל כדי לא להסתיר את האיברים. הדליקו אותם אם רוצים.',
+  kWhat:'מה זה?',kRole:'מה התפקיד?',kOrigin:'מאיפה הוא בא? (מוצא עוברי)',kFact:'הידעת?',kMore:'עוד איברים באותה מערכת',kSystem:'מערכת',kOrgans:'איברים במערכת',kSkinNote:'העור מוצג כצל שקוף סביב הגוף.',
+  qIntroT:'חידון',qIntroP:'10 שאלות: מצאו איבר בגוף, זהו איבר לפי רמז, או קבעו לאיזו מערכת הוא שייך.',qStart:'התחילו חידון',qEnd:'סיום חידון',
+  qOf:(i,n)=>'שאלה '+i+' מתוך '+n,qScore:'ניקוד',qStreak:'רצף',
+  qFind:n=>'מצאו בגוף: <em>'+n+'</em>',qFindHint:'לחצו על האיבר במודל. אפשר לסובב ולהתקרב.',
+  qClue:h=>'הרמז: '+h+'. מהו האיבר?',qWhichSys:n=>'לאיזו מערכת שייך האיבר: <em>'+n+'</em>?',
+  skip:'דלגו',right:p=>'נכון! +'+p+' נקודות',wrongAns:a=>'לא בדיוק. התשובה: <b>'+a+'</b>',
+  thatsX:(x,hint)=>'זה ה'+x+'. נסו שוב.'+(hint?' רמז: האיבר שייך ל<b>'+hint+'</b>.':''),
+  revealed:(s,n)=>(s?'דילגתם. ':'')+'האיבר הוא <b>'+n+'</b>. הוא מסומן במודל.',
+  next:'לשאלה הבאה',toRes:'לתוצאות',done:'סיום החידון',best:'שיא',pts:'נקודות',correctOf:(r,n)=>r+' תשובות נכונות מתוך '+n,
+  m1:'מעולה! אתם כבר מכירים היטב את הגוף.',m2:'יפה! עוד סיבוב ותשלטו בחומר.',m3:'התחלה טובה. פתחו את המדריך או לחצו על איברים וגלו עוד.',
+  again:'שחקו שוב',close:'סגרו',
+  gTabs:['מהתא לגוף','המערכות','מוצא עוברי','הידעת?'],showInBody:'הצג בגוף',
+  g0:'<h2>מהתא לגוף</h2><p>הגוף בנוי ברמות, כמו בובות מטריושקה – כל רמה בנויה מהרמה הקטנה ממנה:</p><div class="levels"><div><b>תא</b>היחידה החיה הקטנה ביותר. בגוף כ־37 טריליון תאים.</div><div><b>רקמה</b>תאים דומים שעובדים יחד: אפיתל (כיסוי), חיבור, שריר ועצב.</div><div><b>איבר</b>כמה רקמות שמבצעות משימה, כמו הלב או הכבד.</div><div><b>מערכת</b>איברים שמשתפים פעולה, כמו מערכת העיכול.</div><div><b>גוף</b>כל המערכות יחד, בתיאום של המוח וההורמונים.</div></div><h4>איך הגוף שומר על איזון?</h4><p>הגוף מנסה לשמור על תנאים יציבים – טמפרטורה של כ־37 מעלות, סוכר ומלחים בדם ועוד. התהליך נקרא <b>הומאוסטזיס</b>. כשחם לנו, כלי הדם בעור מתרחבים ואנחנו מזיעים; כשקר, השרירים רועדים כדי לייצר חום.</p><h4>איך כל המערכות עובדות יחד?</h4><p>אוכלים תפוח: מערכת העיכול מפרקת אותו לסוכר; מערכת הדם מובילה את הסוכר לשרירים; מערכת הנשימה מספקת חמצן ש"שורף" את הסוכר לאנרגיה; השרירים והשלד מזיזים את הגוף; הכליות מנקות פסולת; המוח והעצבים מתאמים את הכול; ההורמונים (כמו אינסולין) מווסתים את הסוכר; ומערכת החיסון שומרת מפני חיידקים.</p><p style="color:var(--muted);font-size:13px">הערה: מערכת הרבייה אינה מוצגת בסימולציה הזאת.</p>',
+  g1:'עשר המערכות בסימולציה',
+  g2:'<h2>מאיפה מתחיל גוף?</h2><p>הכול מתחיל בתא אחד: ביצית שהופרתה. התא מתחלק שוב ושוב, ובערך אחרי שבועיים־שלושה העובר מתארגן ל<b>שלוש שכבות</b>. כל שכבה הופכת לאיברים אחרים:</p><div class="cards"><div class="cc" style="border-color:#f6d743"><h4>אקטודרם – השכבה החיצונית</h4><p>מתפתחת למוח, חוט השדרה ועצבים, לעיניים ולשכבה החיצונית של העור (כולל שיער וציפורניים).</p></div><div class="cc" style="border-color:#e63946"><h4>מזודרם – השכבה האמצעית</h4><p>מתפתחת לשרירים, עצמות, לב וכלי דם, כליות, טחול והשכבה העמוקה של העור.</p></div><div class="cc" style="border-color:#e9a15b"><h4>אנדודרם – השכבה הפנימית</h4><p>מתפתחת לרירית של מערכות העיכול והנשימה, ולכבד, ללבלב, לבלוטת התריס ולשלפוחית.</p></div></div><h4>ציר זמן מקוצר</h4><p>שבוע 1: התא המופרה מתחלק ונצמד לרחם. שבוע 3: נוצרות שלוש השכבות וצינור העצב. בערך שבוע 4: הלב מתחיל לפעום. בערך שבוע 8: כל האיברים העיקריים כבר קיימים בצורה בסיסית, ומכאן העובר בעיקר גדל ומתפתח. (המספרים מחושבים מרגע ההפריה.)</p><p>בכל איבר בסימולציה מוצג גם המוצא העוברי שלו.</p>',
+  g3:'הידעת?'
+ },
+ en:{
+  app:'Anatomy 3D',tagline:'Explore the human body',bpmU:'beats/min',brU:'breaths/min',
+  tExplore:'Explore',tSim:'Simulate',tQuiz:'Quiz',tLearn:'Learn',
+  search:'Search an organ, e.g. liver',noRes:'No organ found',systems:'Body systems',showAll:'Show all',hideAll:'Hide all',
+  skin:'Skin transparency',dim:'Fade other organs',auto:'Auto-rotate',reset:'Reset view',
+  help:'Drag to rotate · scroll to zoom · Shift+drag to pan',
+  simTitle:'Run the body',simSub:'Pick an activity and watch the heart and lungs respond.',
+  act_sleep:'Sleep',act_rest:'Rest',act_walk:'Walk',act_run:'Run',act_fear:'Panic',
+  sim_sleep:'During sleep the body saves energy: heart and breathing slow down while the brain sorts memories.',
+  sim_rest:'At rest the heart beats about 60–100 times a minute and you take roughly 12–16 breaths a minute.',
+  sim_walk:'Walking makes muscles use more oxygen, so the heart and lungs work a little faster.',
+  sim_run:'Running demands a lot of oxygen. The heart beats faster and pumps more blood, and you breathe deeper and faster to bring in oxygen and get rid of carbon dioxide.',
+  sim_fear:'Panic triggers the adrenal glands: adrenaline speeds up pulse and breathing to prepare the body to fight or flee.',
+  wTitle:'Welcome',
+  wP1:'This is a 3D model of the human body. <b>Tap any organ</b> to learn what it does and where it comes from.',
+  wP2:'In the Explore tab you can switch systems on and off and search for organs. In Simulate, watch the heart and lungs respond to activity.',
+  wP3:'Muscles are switched off by default so they don\'t hide the organs. Turn them on if you like.',
+  kWhat:'What is it?',kRole:'What does it do?',kOrigin:'Where does it come from? (embryonic origin)',kFact:'Did you know?',kMore:'More in this system',kSystem:'System',kOrgans:'Organs in this system',kSkinNote:'The skin is shown as a transparent shadow around the body.',
+  qIntroT:'Quiz',qIntroP:'10 questions: find an organ on the body, identify one from a clue, or name its system.',qStart:'Start quiz',qEnd:'End quiz',
+  qOf:(i,n)=>'Question '+i+' of '+n,qScore:'Score',qStreak:'Streak',
+  qFind:n=>'Find on the body: <em>'+n+'</em>',qFindHint:'Tap the organ on the model. You can rotate and zoom.',
+  qClue:h=>'Clue: '+h+'. Which organ is it?',qWhichSys:n=>'Which system does this organ belong to: <em>'+n+'</em>?',
+  skip:'Skip',right:p=>'Correct! +'+p+' points',wrongAns:a=>'Not quite. The answer: <b>'+a+'</b>',
+  thatsX:(x,hint)=>'That is the '+x+'. Try again.'+(hint?' Hint: it belongs to the <b>'+hint+'</b>.':''),
+  revealed:(s,n)=>(s?'Skipped. ':'')+'It is the <b>'+n+'</b>. It is highlighted on the model.',
+  next:'Next question',toRes:'See results',done:'Quiz complete',best:'Best',pts:'points',correctOf:(r,n)=>r+' correct out of '+n,
+  m1:'Excellent! You know the body well.',m2:'Nice! One more round and you\'ll master it.',m3:'A good start. Open the guide or tap organs to learn more.',
+  again:'Play again',close:'Close',
+  gTabs:['Cell to body','Systems','Embryonic origin','Did you know?'],showInBody:'Show on body',
+  g0:'<h2>From cell to body</h2><p>The body is built in levels, like nesting dolls – each level is made of the one below it:</p><div class="levels"><div><b>Cell</b>The smallest living unit. The body has about 37 trillion.</div><div><b>Tissue</b>Similar cells working together: epithelial (covering), connective, muscle and nervous.</div><div><b>Organ</b>Several tissues doing a job, like the heart or liver.</div><div><b>System</b>Organs that cooperate, like the digestive system.</div><div><b>Body</b>All systems together, coordinated by the brain and hormones.</div></div><h4>How does the body stay balanced?</h4><p>The body tries to keep conditions steady – a temperature of about 37 °C, stable blood sugar and salts and more. This is called <b>homeostasis</b>. When you are hot, skin blood vessels widen and you sweat; when you are cold, muscles shiver to make heat.</p><h4>How do all the systems work together?</h4><p>You eat an apple: the digestive system breaks it into sugar; the circulatory system carries the sugar to the muscles; the respiratory system supplies oxygen that "burns" the sugar for energy; muscles and bones move the body; kidneys clear waste; the brain and nerves coordinate it all; hormones such as insulin regulate the sugar; and the immune system guards against germs.</p><p style="color:var(--muted);font-size:13px">Note: the reproductive system is not shown in this model.</p>',
+  g1:'The ten systems in this model',
+  g2:'<h2>Where does a body begin?</h2><p>Everything starts with one cell: a fertilised egg. It divides again and again, and after about two to three weeks the embryo organises into <b>three layers</b>. Each layer becomes different organs:</p><div class="cards"><div class="cc" style="border-color:#f6d743"><h4>Ectoderm – outer layer</h4><p>Becomes the brain, spinal cord and nerves, the eyes, and the outer layer of skin (including hair and nails).</p></div><div class="cc" style="border-color:#e63946"><h4>Mesoderm – middle layer</h4><p>Becomes muscles, bones, the heart and blood vessels, kidneys, spleen and the deeper layer of skin.</p></div><div class="cc" style="border-color:#e9a15b"><h4>Endoderm – inner layer</h4><p>Becomes the lining of the digestive and respiratory systems, plus the liver, pancreas, thyroid and bladder lining.</p></div></div><h4>A short timeline</h4><p>Week 1: the fertilised cell divides and attaches to the womb. Week 3: the three layers and the neural tube form. About week 4: the heart starts to beat. About week 8: all the main organs exist in basic form, and from here the embryo mostly grows and matures. (Counted from fertilisation.)</p><p>Each organ in the model also shows its embryonic origin.</p>',
+  g3:'Did you know?'
+ }
+};
+/* ===================== SCENE ===================== */
+const T=THREE;
+const stage=document.getElementById('stage');
+const renderer=new T.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+stage.appendChild(renderer.domElement);
+const scene=new T.Scene();
+const camera=new T.PerspectiveCamera(38,1,0.1,200);
+scene.add(new T.AmbientLight(0xffffff,0.62));
+scene.add(new T.HemisphereLight(0xbcd2ff,0x2a1a30,0.45));
+const key=new T.DirectionalLight(0xffffff,0.85);key.position.set(6,10,12);scene.add(key);
+const rim=new T.DirectionalLight(0x6fb8ff,0.5);rim.position.set(-8,3,-9);scene.add(rim);
+
+const body=new T.Group();scene.add(body);
+const SYS={};
+SYS_ORDER.forEach(k=>{const g=new T.Group();body.add(g);SYS[k]={key:k,group:g,visible:k!=='muscular'&&k!=='reproductive',...SYSTEMS[k]};g.visible=SYS[k].visible;});
+
+/* floor */
+const floorMats={rings:[],disc:null};
+(function(){
+  const ring=(r,o)=>{const mt=new T.MeshBasicMaterial({color:0x5ad1c8,transparent:true,opacity:o,side:T.DoubleSide});const m=new T.Mesh(new T.RingGeometry(r-0.035,r,96),mt);m.rotation.x=-Math.PI/2;m.position.y=-9.3;scene.add(m);floorMats.rings.push({mt,o});};
+  ring(6,.55);ring(4.6,.25);ring(7.4,.14);
+  const mt=new T.MeshBasicMaterial({color:0x16264a,transparent:true,opacity:.7});
+  const d=new T.Mesh(new T.CircleGeometry(6,64),mt);d.rotation.x=-Math.PI/2;d.position.y=-9.31;scene.add(d);floorMats.disc=mt;
+})();
+function setSceneTheme(th){
+  const sc=(THEMES[th]||THEMES.light).scene;
+  floorMats.disc.color.set(sc.disc);floorMats.disc.opacity=sc.discOp;
+  floorMats.rings.forEach(r=>{r.mt.color.set(sc.ring);r.mt.opacity=r.o*sc.ringMul;});
+  skinMat.color.set(sc.skin);
+  skinMat.opacity=+document.getElementById('skinOp').value*sc.skinMul;
+}
+
+/* ---- helpers ---- */
+const V=(a)=>new T.Vector3(a[0],a[1],a[2]);
+const SPH=new T.SphereGeometry(1,32,24);
+function getMat(o,color,op,key){
+  key=key||'main';
+  if(!o.mats[key]){
+    const m=new T.MeshStandardMaterial({color,roughness:.55,metalness:.04,transparent:op<1,opacity:op});
+    o.mats[key]={m,base:new T.Color(color),op,cur:op};
+  }
+  return o.mats[key].m;
+}
+function add(id,geo,p,opt){
+  opt=opt||{};const o=ORG[id];
+  const mesh=new T.Mesh(geo,getMat(o,opt.color,opt.op==null?1:opt.op,opt.key));
+  mesh.position.set(p[0],p[1],p[2]);
+  if(opt.s)mesh.scale.set(opt.s[0],opt.s[1],opt.s[2]);
+  if(opt.r)mesh.rotation.set(opt.r[0],opt.r[1],opt.r[2]);
+  if(opt.q)mesh.quaternion.copy(opt.q);
+  mesh.userData.organ=id;
+  (opt.parent||SYS[o.sys].group).add(mesh);
+  o.meshes.push(mesh);
+  return mesh;
+}
+function ell(id,p,s,color,opt){return add(id,SPH,p,Object.assign({s,color},opt||{}));}
+function tube(id,pts,r,color,opt){
+  opt=opt||{};
+  const curve=new T.CatmullRomCurve3(pts.map(V));
+  const geo=new T.TubeGeometry(curve,opt.seg||64,r,opt.rad||10,false);
+  add(id,geo,[0,0,0],Object.assign({color},opt));
+  return curve;
+}
+function orient(a,b){
+  const A=V(a),B=V(b),d=B.clone().sub(A);
+  return {mid:A.clone().add(B).multiplyScalar(.5),len:d.length(),q:new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),d.clone().normalize())};
+}
+function bone(id,a,b,r0,r1,color,opt){
+  const {mid,len,q}=orient(a,b);
+  add(id,new T.CylinderGeometry(r1,r0,len,14),[mid.x,mid.y,mid.z],Object.assign({q,color},opt||{}));
+  const k=1.5;
+  add(id,SPH,a,Object.assign({s:[r0*k,r0*k,r0*k],color},opt||{}));
+  add(id,SPH,b,Object.assign({s:[r1*k,r1*k,r1*k],color},opt||{}));
+}
+function muscleBetween(id,a,b,rad,color,flat){
+  const {mid,len,q}=orient(a,b);
+  add(id,SPH,[mid.x,mid.y,mid.z],{s:[rad,len*.55,rad*(flat||.8)],q,color,op:.78});
+}
+
+/* ---- skin (not clickable) ---- */
+const skinMat=new T.MeshStandardMaterial({color:0xe9b99a,transparent:true,opacity:.14,roughness:.8,depthWrite:false,side:T.DoubleSide});
+function skinMesh(geo,p,s,r){const m=new T.Mesh(geo,skinMat);m.position.set(p[0],p[1],p[2]);if(s)m.scale.set(s[0],s[1],s[2]);if(r)m.rotation.set(r[0],r[1],r[2]);SYS.skin.group.add(m);return m;}
+(function skin(){
+  const prof=[[0.01,-1.95],[1.0,-1.9],[1.45,-1.55],[1.5,-0.5],[1.3,1.5],[1.45,3.2],[1.6,4.6],[1.55,5.4],[1.2,5.8],[0.7,6.05],[0.01,6.15]].map(a=>new T.Vector2(a[0],a[1]));
+  window.torsoSkin=skinMesh(new T.LatheGeometry(prof,40),[0,0,0],[1.15,1,.72]);
+  skinMesh(SPH,[0,7.7,0.05],[0.92,1.12,1.02]);                             // head
+  skinMesh(new T.CylinderGeometry(.46,.5,1.2,20),[0,6.5,0]);               // neck
+  skinMesh(new T.ConeGeometry(.13,.32,12),[0,7.5,1.08],null,[Math.PI/2,0,0]); // nose
+  [-1,1].forEach(s=>{
+    skinMesh(SPH,[s*2.05,5.2,0],[.55,.55,.55]);
+    [[[s*2.1,5.2,0],[s*2.45,2.4,0],.4,.32],[[s*2.45,2.4,0],[s*2.8,-.1,.1],.32,.22]].forEach(l=>{
+      const {mid,len,q}=orient(l[0],l[1]);const m=skinMesh(new T.CylinderGeometry(l[3],l[2],len,16),[mid.x,mid.y,mid.z]);m.quaternion.copy(q);
+    });
+    skinMesh(SPH,[s*2.45,2.4,0],[.33,.33,.33]);
+    skinMesh(SPH,[s*2.86,-.75,.1],[.22,.46,.14]);
+    [[[s*.8,-1.5,0],[s*.9,-5.1,.05],.62,.42],[[s*.9,-5.1,.05],[s*.95,-8.6,0],.42,.26]].forEach(l=>{
+      const {mid,len,q}=orient(l[0],l[1]);const m=skinMesh(new T.CylinderGeometry(l[3],l[2],len,16),[mid.x,mid.y,mid.z]);m.quaternion.copy(q);
+    });
+    skinMesh(SPH,[s*.9,-5.1,.05],[.43,.43,.43]);
+    skinMesh(SPH,[s*.95,-9.0,.45],[.3,.22,.68]);
+  });
+})();
+
+/* ---- skeleton ---- */
+const BONE='#e6d9b8';
+(function skeleton(){
+  ell('skull',[0,7.85,-0.02],[.82,.98,.93],BONE,{op:.42});
+  ell('skull',[0,6.95,.42],[.5,.22,.45],BONE,{op:.42});
+  // spine
+  const sp=new T.CatmullRomCurve3([[0,6.6,-.15],[0,5.8,-.32],[0,4.2,-.5],[0,2.5,-.45],[0,1,-.32],[0,-.4,-.4],[0,-1.2,-.45]].map(V));
+  window.spineCurve=sp;
+  for(let i=0;i<24;i++){
+    const t=i/23,p=sp.getPoint(t),tg=sp.getTangent(t);
+    const r=.13+.1*Math.max(0,(t-.3))/.7,h=.2;
+    const q=new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),tg);
+    add('spine',new T.CylinderGeometry(r,r,h,12),[p.x,p.y,p.z],{q,color:BONE});
+    add('spine',new T.BoxGeometry(.06,.14,.2),[p.x,p.y,p.z-.18],{q,color:BONE});
+  }
+  // ribs
+  for(let i=0;i<12;i++){
+    const rx=.85+.6*Math.sin((i+1)/12*Math.PI),rz=.5+.2*Math.sin((i+1)/12*Math.PI);
+    const y0=5.2-i*.33,zc=-.5+rz*.95,end=i>=10?1.9:2.95;
+    [-1,1].forEach(s=>{
+      const pts=[];
+      for(let k=0;k<=14;k++){
+        const a=.12+(end-.12)*k/14;
+        pts.push([s*rx*Math.sin(a),y0-.38*(a/Math.PI)-(i>7?.12*Math.sin(a):0),zc-rz*Math.cos(a)]);
+      }
+      tube('ribs',pts,.045,BONE,{seg:40,rad:6});
+    });
+  }
+  add('sternum',new T.BoxGeometry(.3,1.9,.1),[0,4.25,.86],{color:BONE});
+  [-1,1].forEach(s=>{
+    bone('clavicle',[s*.12,5.5,.55],[s*1.85,5.5,.2],.09,.09,BONE);
+    bone('humerus',[s*2.1,5.2,0],[s*2.45,2.5,0],.14,.12,BONE);
+    bone('forearm',[s*2.45,2.4,.07],[s*2.76,-.1,.07],.09,.07,BONE);
+    bone('forearm',[s*2.45,2.4,-.08],[s*2.7,-.1,-.08],.07,.06,BONE);
+    ell('hand',[s*2.86,-.75,.08],[.17,.42,.1],BONE);
+    bone('femur',[s*.8,-1.5,0],[s*.9,-5.1,.03],.18,.16,BONE);
+    bone('tibia',[s*.9,-5.2,.05],[s*.95,-8.6,0],.14,.1,BONE);
+    bone('tibia',[s*1.12,-5.3,-.02],[s*1.08,-8.5,-.04],.06,.05,BONE);
+    ell('foot',[s*.95,-9.0,.42],[.22,.12,.55],BONE);
+    ell('pelvis',[s*1.05,-.85,-.05],[.55,.5,.2],BONE,{r:[0,s*.5,s*.3]});
+  });
+  const tor=new T.TorusGeometry(1,.2,10,36);tor.rotateX(Math.PI/2);
+  window.pelvisRing=add('pelvis',tor,[0,-1.55,0],{s:[1.2,1,.68],color:BONE});
+})();
+
+/* ---- muscles ---- */
+const MUS='#c0392b';
+(function muscles(){
+  [-1,1].forEach(s=>{
+    ell('pectoral',[s*.75,4.5,.95],[.8,.5,.2],MUS,{op:.78,r:[0,0,s*.25]});
+    ell('deltoid',[s*2.05,5.1,0],[.55,.6,.5],MUS,{op:.78});
+    muscleBetween('biceps',[s*2.15,4.8,.25],[s*2.45,3,.28],.26,MUS);
+    muscleBetween('quads',[s*.85,-2,.3],[s*.95,-4.8,.3],.5,MUS);
+    muscleBetween('calf',[s*.95,-5.5,-.2],[s*.97,-7.4,-.2],.3,MUS);
+    for(let j=0;j<4;j++)add('abs',new T.BoxGeometry(.5,.42,.16),[s*.29,1.5-j*.5,.84],{color:MUS,op:.78});
+  });
+  const dome=new T.SphereGeometry(1,32,16,0,Math.PI*2,0,Math.PI/2);
+  const m=add('diaphragm',dome,[0,2.15,0],{s:[1.35,.55,.75],color:'#a93226',op:.5});
+  m.material.side=T.DoubleSide;
+})();
+
+/* ---- circulatory ---- */
+const flows=[];
+function addFlow(curve,color,count,r){
+  const g=new T.SphereGeometry(r||.06,8,8),mt=new T.MeshBasicMaterial({color});
+  const items=[];
+  for(let i=0;i<count;i++){const m=new T.Mesh(g,mt);SYS.circulatory.group.add(m);items.push(m);}
+  flows.push({curve,items,n:count});
+}
+const heartGroup=new T.Group();heartGroup.position.set(.38,3.45,.28);heartGroup.rotation.z=.5;SYS.circulatory.group.add(heartGroup);
+(function circulatory(){
+  const RED='#c1121f',ART='#ff4d5a',VEN='#3d7bff';
+  ell('heart',[0,0,0],[.5,.62,.42],RED,{parent:heartGroup});
+  ell('heart',[.08,-.4,.03],[.3,.42,.3],RED,{parent:heartGroup});
+  ell('heart',[-.27,.5,-.02],[.2,.22,.2],'#d3202e',{parent:heartGroup});
+  ell('heart',[.27,.5,-.02],[.2,.22,.2],'#d3202e',{parent:heartGroup});
+  // arteries
+  const aorta=tube('arteries',[[.3,4,.3],[.15,4.9,.2],[.55,5,0],[.62,4.3,-.3],[.5,2.5,-.33],[.3,.5,-.3],[.15,-1.1,-.25]],.13,ART,{seg:90});
+  addFlow(aorta,'#ffb3b9',16,.07);
+  [-1,1].forEach(s=>{
+    const leg=tube('arteries',[[.15,-1.1,-.25],[s*.5,-1.8,-.1],[s*.75,-3.5,.1],[s*.82,-5.1,.12],[s*.9,-8.3,.08]],.08,ART,{seg:70});
+    addFlow(leg,'#ffb3b9',10,.045);
+    const car=tube('arteries',[[.12,4.95,.15],[s*.3,6,.2],[s*.4,7,.3],[s*.35,7.4,.4]],.06,ART,{seg:40});
+    addFlow(car,'#ffb3b9',6,.04);
+    const sx=s>0?.55:.12;
+    const arm=tube('arteries',[[sx,5.05,.05],[s*1.5,5.3,.05],[s*2.2,4.8,.15],[s*2.45,2.5,.18],[s*2.75,0,.15]],.06,ART,{seg:60});
+    addFlow(arm,'#ffb3b9',8,.04);
+    // veins
+    const vleg=tube('veins',[[s*.7,-8.3,-.1],[s*.7,-5.1,-.05],[s*.6,-3.5,-.05],[s*.4,-1.8,-.15],[-.2,-1.1,-.2]],.08,VEN,{seg:70});
+    addFlow(vleg,'#a8c4ff',10,.045);
+    const jug=tube('veins',[[s*.45,7.2,.25],[s*.4,6.2,.25],[s*.3,5.4,.2],[-.1,4.1,.3]],.07,VEN,{seg:40});
+    addFlow(jug,'#a8c4ff',6,.04);
+    const varm=tube('veins',[[s*2.6,0,0],[s*2.3,2.5,0],[s*2.1,4.8,-.05],[s*1.3,5.2,0],[0,4.5,.25]],.055,VEN,{seg:60});
+    addFlow(varm,'#a8c4ff',8,.04);
+  });
+  const cava=tube('veins',[[-.2,-1.1,-.2],[-.3,.5,-.15],[-.35,2.2,-.1],[-.25,3.5,.1],[-.05,3.65,.35]],.14,VEN,{seg:60});
+  addFlow(cava,'#a8c4ff',12,.07);
+})();
+
+/* ---- respiratory ---- */
+const lungMeshes=[];
+(function respiratory(){
+  const LC='#f7a8b8';
+  lungMeshes.push(ell('lungs',[.95,3.85,.1],[.78,1.3,.6],LC,{op:.8}));
+  lungMeshes.push(ell('lungs',[-.95,3.85,.1],[.85,1.35,.62],LC,{op:.8}));
+  tube('trachea',[[0,6.4,.1],[0,5.2,.1],[0,4.7,.12]],.17,'#bcd7e8',{seg:30});
+  [-1,1].forEach(s=>tube('trachea',[[0,4.7,.12],[s*.35,4.4,.1],[s*.7,4,.08]],.1,'#bcd7e8',{seg:20}));
+  lungMeshes.forEach(m=>m.userData.bs=m.scale.clone());
+})();
+
+/* ---- digestive ---- */
+(function digestive(){
+  tube('esophagus',[[0,6.4,-.05],[0,5,-.1],[0,3.5,-.12],[.15,2.5,0],[.45,2.15,.2]],.1,'#d98a6b',{seg:60});
+  ell('stomach',[.7,1.6,.3],[.55,.5,.38],'#ee9b8a',{r:[0,0,.8]});
+  ell('stomach',[.55,2.0,.2],[.3,.3,.28],'#ee9b8a');
+  ell('liver',[-.65,1.85,.3],[1.05,.6,.55],'#8c3b2e',{r:[0,0,.15]});
+  ell('liver',[.15,1.95,.4],[.6,.35,.4],'#8c3b2e');
+  ell('gallbladder',[-.55,1.25,.6],[.13,.22,.13],'#4fb06a');
+  const pts=[];
+  for(let r=0;r<7;r++){const y=.55-r*.26,dir=r%2?1:-1;
+    for(let k=0;k<=8;k++){const u=k/8;pts.push([(dir>0?-.8+1.6*u:.8-1.6*u),y+.07*Math.sin(k*2.2+r),.42+.1*Math.sin(k*1.7+r*1.3)]);}}
+  tube('smallint',pts,.09,'#f0a898',{seg:520,rad:8});
+  tube('largeint',[[-1.05,-1.1,.35],[-1.12,-.4,.35],[-1.12,.5,.35],[-.95,1.05,.4],[-.4,1.2,.5],[0,1.05,.5],[.5,1.2,.5],[.95,1.05,.4],[1.12,.5,.35],[1.12,-.4,.35],[1,-1,.3],[.5,-1.3,.2],[.1,-1.2,.0],[0,-1.55,-.1]],.14,'#d9a066',{seg:140});
+  tube('largeint',[[-1.05,-1.15,.4],[-1,-1.45,.45]],.04,'#d9a066',{seg:8,rad:6});
+})();
+
+/* ---- nervous ---- */
+(function nervous(){
+  // brain with folds
+  const bg=new T.SphereGeometry(1,56,40),pos=bg.attributes.position;
+  for(let i=0;i<pos.count;i++){
+    const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
+    let k=1+.045*Math.sin(x*9+z*3)*Math.sin(y*8+x*2)+.03*Math.sin(z*11+y*5);
+    if(Math.abs(x)<.07&&y>0)k-=.09*(1-Math.abs(x)/.07);
+    pos.setXYZ(i,x*k,y*k,z*k);
+  }
+  bg.computeVertexNormals();
+  add('brain',bg,[0,8,-.05],{s:[.68,.62,.78],color:'#f0a6b8'});
+  ell('brain',[0,7.6,-.55],[.45,.26,.3],'#d98aa0');
+  tube('brain',[[0,7.6,-.2],[0,7.2,-.25],[0,6.8,-.25]],.1,'#e8a0b4',{seg:12,rad:8});
+  tube('cord',[[0,6.9,-.25],[0,6.6,-.31],[0,5.8,-.48],[0,4.2,-.66],[0,2.5,-.61],[0,1,-.48],[0,-.4,-.56],[0,-1.0,-.6]],.075,'#f6e08a',{seg:90});
+  [-1,1].forEach(s=>{
+    ell('eyes',[s*.34,7.8,.8],[.17,.17,.17],'#f5f5f5');
+    ell('eyes',[s*.34,7.8,.95],[.09,.09,.06],'#2b5fa8',{key:'iris'});
+    tube('nerves',[[0,5.3,-.55],[s*1.0,5.3,-.4],[s*2.0,4.9,-.2],[s*2.4,3,-.1],[s*2.8,0,.0]],.04,'#ffe24a',{seg:50,rad:6});
+    tube('nerves',[[0,-.9,-.6],[s*.7,-2,-.3],[s*.85,-5.2,-.2],[s*.9,-8.3,-.1]],.05,'#ffe24a',{seg:60,rad:6});
+  });
+})();
+
+/* ---- urinary ---- */
+(function urinary(){
+  [-1,1].forEach(s=>{
+    ell('kidneys',[s*.7,1.1,-.35],[.22,.4,.2],'#a3452f',{r:[0,0,s*.15]});
+    tube('ureters',[[s*.62,.8,-.3],[s*.5,-.2,-.3],[s*.3,-1,-.05],[s*.12,-1.3,.3]],.035,'#f2e394',{seg:30,rad:6});
+  });
+  ell('bladder',[0,-1.35,.38],[.3,.27,.3],'#f0d36a',{op:.88});
+})();
+
+/* ---- endocrine & immune ---- */
+(function endoimm(){
+  [-1,1].forEach(s=>{
+    ell('thyroid',[s*.2,6,.32],[.16,.28,.12],'#b07cf0',{r:[0,0,s*-.15]});
+    ell('adrenals',[s*.7,1.65,-.35],[.18,.1,.14],'#f2c14e');
+    ell('thymus',[s*.2,4.75,.4],[.2,.4,.13],'#7ccf6b',{r:[0,0,s*-.2]});
+  });
+  add('thyroid',new T.BoxGeometry(.3,.08,.1),[0,5.85,.32],{color:'#b07cf0'});
+  tube('pancreas',[[-.4,1.1,.05],[.1,1.2,0],[.7,1.45,-.15]],.1,'#e8c07a',{seg:20});
+  ell('spleen',[1.18,1.7,-.15],[.25,.45,.22],'#7b3fa0',{r:[0,0,-.2]});
+  [[.5,6.5,.2],[-.5,6.5,.2],[.35,6.3,.3],[-.35,6.3,.3],[1.55,4.8,.2],[-1.55,4.8,.2],[.7,-1.5,.45],[-.7,-1.5,.45],[0,.3,-.2],[.15,.1,-.15]].forEach(p=>ell('lymph',p,[.09,.09,.09],'#8be37a'));
+})();
+
+/* ---- mouth, throat, reproductive organs, sex toggle ---- */
+let sexSel='m';
+const orgOK=o=>!o.sex||o.sex===sexSel;
+(function extra(){
+  const TOOTH='#fffaf0';
+  for(let r=0;r<2;r++){
+    for(let i=-5;i<=5;i++){
+      const a=i*.2,x=.38*Math.sin(a),z=.4+.38*Math.cos(a),y=r?6.93:7.1;
+      const m=add('teeth',new T.BoxGeometry(.075,.11,.05),[x,y,z],{color:TOOTH});m.rotation.y=-a;
+    }
+  }
+  ell('tongue',[0,7.0,.4],[.2,.06,.27],'#e07a8a');
+  tube('pharynx',[[0,7.0,.12],[0,6.75,.02],[0,6.4,-.03]],.17,'#d98a6b',{seg:20});
+  // female
+  ell('uterus',[0,-1.02,.12],[.26,.34,.22],'#d9667f');
+  ell('uterus',[0,-1.35,.12],[.09,.1,.09],'#c24f69');
+  [-1,1].forEach(s=>{
+    ell('ovaries',[s*.66,-.92,.06],[.15,.11,.11],'#e8a0a8');
+    tube('ovaries',[[s*.18,-.82,.12],[s*.4,-.74,.14],[s*.58,-.84,.08]],.028,'#f0b5bb',{seg:20,rad:6});
+    // male
+    ell('testes',[s*.2,-2.05,.42],[.14,.2,.14],'#dcae92');
+    tube('testes',[[s*.2,-1.9,.4],[s*.28,-1.45,.3],[s*.12,-1.7,.17]],.025,'#c98f6a',{seg:24,rad:6});
+  });
+  ell('prostate',[0,-1.72,.16],[.15,.12,.13],'#c98f6a');
+})();
+function applySex(s){
+  sexSel=s;
+  ORGANS.forEach(o=>{if(o.sex)o.meshes.forEach(m=>{m.visible=(o.sex===s);});});
+  if(window.torsoSkin)window.torsoSkin.scale.x=s==='f'?1.04:1.15;
+  if(window.pelvisRing)window.pelvisRing.scale.x=s==='f'?1.32:1.2;
+}
+applySex('m');
+
+/* ---- more head & neck organs ---- */
+(function head2(){
+  [-1,1].forEach(s=>{
+    ell('ears',[s*.95,7.75,-.02],[.09,.3,.2],'#e9a98f',{r:[0,0,s*.15]});
+    ell('ears',[s*.58,7.72,-.02],[.13,.13,.13],'#c9b6ff',{key:'inner'});
+    ell('salivary',[s*.74,7.1,.33],[.14,.2,.15],'#e8b36a');
+    ell('salivary',[s*.22,6.88,.6],[.1,.06,.1],'#e8b36a');
+  });
+  add('nose',new T.ConeGeometry(.13,.34,14),[0,7.52,1.02],{color:'#e9b99a',r:[Math.PI/2,0,0]});
+  tube('nose',[[0,7.5,.95],[0,7.38,.6],[0,7.12,.2]],.08,'#e8a0a0',{seg:20,rad:8});
+  add('larynx',new T.CylinderGeometry(.19,.17,.4,16),[0,6.45,.14],{color:'#a9c8dc'});
+  tube('mandible',[[-.62,7.4,.0],[-.55,6.95,.3],[-.2,6.78,.66],[.2,6.78,.66],[.55,6.95,.3],[.62,7.4,.0]],.07,BONE,{seg:50,rad:8});
+})();
+/* ===================== STATE & PICKING ===================== */
+const raycaster=new T.Raycaster();
+const mouse=new T.Vector2();
+let selected=null,hovered=null,dimOn=true;
+const sysVisible=id=>SYS[ORG[id].sys].visible;
+
+function allPickables(){
+  const arr=[];
+  ORGANS.forEach(o=>{if(sysVisible(o.id)&&orgOK(o))arr.push(...o.meshes);});
+  return arr;
+}
+function pickAt(cx,cy){
+  const r=renderer.domElement.getBoundingClientRect();
+  mouse.set(((cx-r.left)/r.width)*2-1,-((cy-r.top)/r.height)*2+1);
+  raycaster.setFromCamera(mouse,camera);
+  const hits=raycaster.intersectObjects(allPickables(),false);
+  if(!hits.length)return null;
+  for(const h of hits){if(!ORG[h.object.userData.organ].soft)return h.object.userData.organ;}
+  return hits[0].object.userData.organ;
+}
+
+/* ===================== CAMERA ===================== */
+const cam={yaw:0,pitch:.08,dist:34,target:new T.Vector3(0,.2,0),auto:false,tw:null};
+const HOME={yaw:0,pitch:.08,dist:34,target:new T.Vector3(0,.2,0)};
+function applyCam(){
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(cam.target.x+cam.dist*Math.sin(cam.yaw)*cp,cam.target.y+cam.dist*Math.sin(cam.pitch),cam.target.z+cam.dist*Math.cos(cam.yaw)*cp);
+  camera.lookAt(cam.target);
+}
+function tweenTo(to,dur){
+  let dy=to.yaw!=null?to.yaw-cam.yaw:0;dy=Math.atan2(Math.sin(dy),Math.cos(dy));
+  cam.tw={t:0,dur:dur||.9,from:{yaw:cam.yaw,pitch:cam.pitch,dist:cam.dist,target:cam.target.clone()},
+    to:{yaw:cam.yaw+dy,pitch:to.pitch!=null?to.pitch:cam.pitch,dist:to.dist!=null?to.dist:cam.dist,target:to.target?to.target.clone():cam.target.clone()}};
+}
+function focusOrgan(id){
+  const box=new T.Box3();
+  ORG[id].meshes.forEach(m=>box.expandByObject(m));
+  const c=box.getCenter(new T.Vector3()),sz=box.getSize(new T.Vector3());
+  const m=Math.max(sz.x,sz.y,sz.z);
+  tweenTo({target:c,dist:Math.min(34,Math.max(9,m*1.6+8)),pitch:.12,yaw:0},.9);
+}
+function resetCam(){tweenTo(HOME,.9);}
+
+(function controls(){
+  const el=renderer.domElement;const ptrs=new Map();let moved=0,start=null,pinch=0;
+  el.addEventListener('contextmenu',e=>e.preventDefault());
+  el.addEventListener('pointerdown',e=>{el.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=0;start={x:e.clientX,y:e.clientY};cam.tw=null;
+    if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y);}});
+  el.addEventListener('pointermove',e=>{
+    const p=ptrs.get(e.pointerId);
+    if(!p){onHover(e);return;}
+    const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);
+    if(ptrs.size===2){
+      const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(pinch)cam.dist=Math.max(5,Math.min(48,cam.dist*pinch/d));pinch=d;
+    }else if(e.shiftKey||e.buttons===2){
+      const k=cam.dist*.0016;
+      cam.target.y+=dy*k;
+      cam.target.x-=dx*k*Math.cos(cam.yaw);cam.target.z+=dx*k*Math.sin(cam.yaw);
+      cam.target.y=Math.max(-9,Math.min(9,cam.target.y));
+    }else{
+      cam.yaw-=dx*.0065;cam.pitch=Math.max(-1.2,Math.min(1.2,cam.pitch+dy*.005));
+    }
+  });
+  const up=e=>{
+    ptrs.delete(e.pointerId);pinch=0;
+    if(moved<6&&start&&e.type==='pointerup'){onClickScene(pickAt(e.clientX,e.clientY));}
+  };
+  el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+  el.addEventListener('wheel',e=>{e.preventDefault();cam.tw=null;cam.dist=Math.max(5,Math.min(48,cam.dist*Math.exp(e.deltaY*.0012)));},{passive:false});
+  el.addEventListener('pointerleave',()=>{setHover(null);});
+})();
+
+/* ===================== ANIMATION ===================== */
+let bpm=72,brpm=14,tgtBpm=72,tgtBr=14,beatPh=0,breathPh=0,clock=new T.Clock();
+function frame(){
+  const dt=Math.min(clock.getDelta(),.05),time=clock.elapsedTime;
+  // camera
+  if(cam.tw){
+    const w=cam.tw;w.t+=dt/w.dur;const k=Math.min(1,w.t),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    cam.yaw=w.from.yaw+(w.to.yaw-w.from.yaw)*e;cam.pitch=w.from.pitch+(w.to.pitch-w.from.pitch)*e;cam.dist=w.from.dist+(w.to.dist-w.from.dist)*e;
+    cam.target.copy(w.from.target).lerp(w.to.target,e);if(k>=1)cam.tw=null;
+  }else if(cam.auto){cam.yaw+=dt*.35;}
+  applyCam();
+  // vitals
+  bpm+=(tgtBpm-bpm)*Math.min(1,dt*1.2);brpm+=(tgtBr-brpm)*Math.min(1,dt*1.2);
+  beatPh=(beatPh+dt*bpm/60)%1;breathPh=(breathPh+dt*brpm/60)%1;
+  const lub=Math.exp(-Math.pow((beatPh-.05)/.045,2)),dub=.6*Math.exp(-Math.pow((beatPh-.3)/.055,2));
+  heartGroup.scale.setScalar(1+.11*(lub+dub));
+  const br=.5-.5*Math.cos(breathPh*Math.PI*2);const amp=.04+.03*Math.min(1,brpm/38);
+  lungMeshes.forEach(m=>m.scale.set(m.userData.bs.x*(1+amp*br),m.userData.bs.y*(1+amp*1.4*br),m.userData.bs.z*(1+amp*br)));
+  flows.forEach((f,fi)=>{const sp=.14*bpm/72;f.items.forEach((m,i)=>{const t=(((time*sp)+i/f.n)%1+1)%1;m.position.copy(f.curve.getPoint(t));});});
+  // materials: dim & highlight
+  const pulse=.5+.5*Math.sin(time*4);
+  ORGANS.forEach(o=>{
+    let target=1;
+    if(dimOn&&(selected||hiSet.size)&&o.id!==selected&&!hiSet.has(o.id))target=.16;
+    o.cur+=(target-o.cur)*Math.min(1,dt*7);
+    const glow=o.id===selected?.28+.22*pulse:(o.id===hovered?.28:0);
+    for(const k in o.mats){const e=o.mats[k];
+      e.m.opacity=e.op*o.cur;
+      e.m.transparent=e.m.opacity<.995;e.m.depthWrite=e.m.opacity>.6;
+      if(k==='main'||k==='iris'){if(hiSet.has(o.id))e.m.emissive.copy(hiRed).multiplyScalar(.35+.35*pulse);else e.m.emissive.copy(e.base).multiplyScalar(glow);}}
+  });
+  if(typeof journeyTick==='function')journeyTick(dt,time);
+  updateTag();
+  renderer.render(scene,camera);
+  requestAnimationFrame(frame);
+}
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);renderer.domElement.style.width='100%';renderer.domElement.style.height='100%';camera.aspect=w/h;
+  camera.fov=w/h<.75?60:38;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+/* ---- extra strings ---- */
+Object.assign(STR.he,{
+ lvlT:'רמת הסבר',lvl1:'מתחיל',lvl2:'תיכון',lvl3:'מתקדם',bodyT:'גוף',bodyF:'אישה',bodyM:'גבר',
+ kDeep:'קצת יותר לעומק',kAdv:'ברמה מתקדמת',tJourney:'מסעות',
+ jTitle:'מסעות בגוף',jSub:'בחרו מסע וצפו בו שלב אחר שלב. הנקודה הזוהרת מראה היכן אתם.',
+ jStep:(i,n)=>'שלב '+i+' מתוך '+n,jPrev:'הקודם',jNext:'הבא',jFinish:'סיום',jStop:'עצרו מסע',
+ jDone:'המסע הושלם',jDoneP:'עברתם בכל התחנות. רוצים לנסות מסע אחר?',jAgain:'שוב',jOther:'מסעות אחרים',
+ qRole:n=>'מה התפקיד של: <em>'+n+'</em>?',qOrigin:n=>'מאיזו שכבה עוברית מתפתח האיבר: <em>'+n+'</em>?',
+ layer_ecto:'אקטודרם (חיצונית)',layer_meso:'מזודרם (אמצעית)',layer_endo:'אנדודרם (פנימית)',
+ qIntroP:'10 שאלות ברמה שבחרתם: מצאו איבר, זהו איבר לפי רמז, קבעו מערכת, תפקיד או מוצא עוברי (ברמות גבוהות יותר).',
+ wP3:'השרירים ומערכת הרבייה כבויים כברירת מחדל כדי לא להסתיר איברים אחרים. הדליקו אותם אם רוצים.',
+ wDisc:'האתר נועד ללימוד כללי בלבד ואינו תחליף לייעוץ רפואי.',
+ g1:'כל המערכות בסימולציה'
+});
+Object.assign(STR.en,{
+ lvlT:'Detail level',lvl1:'Beginner',lvl2:'High school',lvl3:'Advanced',bodyT:'Body',bodyF:'Female',bodyM:'Male',
+ kDeep:'A bit deeper',kAdv:'Advanced',tJourney:'Journeys',
+ jTitle:'Journeys through the body',jSub:'Pick a journey and follow it step by step. The glowing dot shows where you are.',
+ jStep:(i,n)=>'Step '+i+' of '+n,jPrev:'Back',jNext:'Next',jFinish:'Finish',jStop:'Stop journey',
+ jDone:'Journey complete',jDoneP:'You passed every stop. Want to try another journey?',jAgain:'Again',jOther:'Other journeys',
+ qRole:n=>'What does this organ do: <em>'+n+'</em>?',qOrigin:n=>'Which embryonic layer does this organ come from: <em>'+n+'</em>?',
+ layer_ecto:'Ectoderm (outer)',layer_meso:'Mesoderm (middle)',layer_endo:'Endoderm (inner)',
+ qIntroP:'10 questions at your chosen level: find an organ, identify one from a clue, name its system, and at higher levels its role or embryonic origin.',
+ wP3:'Muscles and the reproductive system are off by default so they don\'t hide other organs. Turn them on if you like.',
+ wDisc:'For general learning only. It is not a substitute for medical advice.',
+ g1:'All the systems in this model'
+});
+STR.he.g0=STR.he.g0.replace('<p style="color:var(--muted);font-size:13px">הערה: מערכת הרבייה אינה מוצגת בסימולציה הזאת.</p>','');
+STR.en.g0=STR.en.g0.replace('<p style="color:var(--muted);font-size:13px">Note: the reproductive system is not shown in this model.</p>','');
+
+/* ===================== UI ===================== */
+const $=id=>document.getElementById(id);
+const tag=$('tag'),tip=$('tip'),infoEl=$('info'),sheet=$('sheet');
+const quiz={active:false,i:0,n:10,score:0,right:0,streak:0,cur:null,done:false,wrong:0,order:[],best:0};
+const SYS_EN={reproductive:'Reproductive system',skin:'Skin',skeletal:'Skeletal system',muscular:'Muscular system',circulatory:'Circulatory system',respiratory:'Respiratory system',digestive:'Digestive system',nervous:'Nervous system',urinary:'Urinary system',endocrine:'Endocrine system',immune:'Immune & lymphatic system'};
+
+/* ---- language helpers ---- */
+let lang='he',theme='light',level=1;
+try{const l=localStorage.getItem('lang');if(l)lang=l;const th=localStorage.getItem('theme');if(th)theme=th;const lv=+localStorage.getItem('level');if(lv>=1&&lv<=3)level=lv;}catch(e){}
+function t(k,...a){const v=STR[lang][k];return typeof v==='function'?v(...a):v;}
+const nm=o=>lang==='he'?o.he:o.en;
+const alt=o=>lang==='he'?o.en:o.he;
+const fld=(o,k)=>lang==='he'?o[k]:EN_ORG[o.id][k];
+const deepOf=(o,k)=>{const m=lang==='he'?DEEP_HE:EN_DEEP;return m[o.id]&&m[o.id][k];};
+const sysName=k=>lang==='he'?SYSTEMS[k].he:SYS_EN[k];
+const sfld=(k,f)=>lang==='he'?SYSTEMS[k][f]:EN_SYS[k][f];
+const factList=()=>lang==='he'?FACTS:EN_FACTS;
+const isMobile=()=>window.innerWidth<=820;
+
+/* ---- hover / click ---- */
+function setHover(id,ev){
+  hovered=id;
+  const hide=quiz.active&&quiz.cur&&quiz.cur.type==='find'&&!quiz.done;
+  if(id&&!hide){tip.style.display='block';tip.textContent=nm(ORG[id]);if(ev){tip.style.left=ev.clientX+'px';tip.style.top=ev.clientY+'px';}}
+  else tip.style.display='none';
+  renderer.domElement.style.cursor=id?'pointer':'';
+}
+let hoverBusy=false;
+function onHover(e){
+  if(hoverBusy)return;hoverBusy=true;
+  requestAnimationFrame(()=>{hoverBusy=false;});
+  setHover(pickAt(e.clientX,e.clientY),e);
+}
+function onClickScene(id){
+  if(quiz.active&&quiz.cur&&quiz.cur.type==='find'&&!quiz.done){if(id)answerFind(id);return;}
+  if(id)selectOrgan(id);else{selected=null;showWelcome();}
+}
+function showSystem(k,on){
+  SYS[k].visible=on;SYS[k].group.visible=on;
+  const cb=document.querySelector('[data-sys="'+k+'"]');if(cb)cb.checked=on;
+}
+
+/* ---- info card ---- */
+let infoState={t:'welcome'};
+function renderInfo(){
+  const s=infoState;
+  if(s.t==='cond'){renderCondInfo();return;}
+  if(s.t==='organ'){
+    const o=ORG[s.id],sy=SYSTEMS[o.sys];
+    infoEl.innerHTML=spk('info')+'<button class="chip btnlike" style="background:'+sy.color+'" data-sysinfo="'+o.sys+'">'+sysName(o.sys)+'</button>'+
+      '<h2>'+nm(o)+'</h2><div class="en" dir="auto">'+alt(o)+'</div>'+
+      '<div class="blk"><b>'+t('kWhat')+'</b><p>'+fld(o,'desc')+'</p></div>'+
+      '<div class="blk"><b>'+t('kRole')+'</b><p>'+fld(o,'fn')+'</p></div>'+
+      (level>=2&&deepOf(o,'deep')?'<div class="blk"><b>'+t('kDeep')+'</b><p>'+deepOf(o,'deep')+'</p></div>':'')+(level>=3&&deepOf(o,'adv')?'<div class="blk"><b>'+t('kAdv')+'</b><p>'+deepOf(o,'adv')+'</p></div>':'')+'<div class="blk"><b>'+t('kOrigin')+'</b><p>'+fld(o,'origin')+'</p></div>'+
+      '<div class="fact"><b>'+t('kFact')+'</b><p style="margin:3px 0 0;line-height:1.6">'+fld(o,'fact')+'</p></div>'+
+      '<div class="sec">'+t('kMore')+'</div><div class="chips">'+ORGANS.filter(x=>x.sys===o.sys&&x.id!==o.id&&orgOK(x)).map(x=>'<button data-org="'+x.id+'">'+nm(x)+'</button>').join('')+'</div>';
+  }else if(s.t==='sys'){
+    const k=s.k,sy=SYSTEMS[k];
+    infoEl.innerHTML=spk('info')+'<span class="chip" style="background:'+sy.color+'">'+t('kSystem')+'</span><h2>'+sysName(k)+'</h2><div class="en"></div>'+
+      '<div class="blk"><p>'+sfld(k,'sum')+'</p></div><div class="blk"><b>'+t('kOrigin')+'</b><p>'+sfld(k,'origin')+'</p></div>'+
+      '<div class="fact"><b>'+t('kFact')+'</b><p style="margin:3px 0 0;line-height:1.6">'+sfld(k,'fact')+'</p></div>'+
+      '<div class="sec">'+t('kOrgans')+'</div><div class="chips">'+ORGANS.filter(x=>x.sys===k&&orgOK(x)).map(x=>'<button data-org="'+x.id+'">'+nm(x)+'</button>').join('')+'</div>'+(k==='skin'?'<p style="font-size:13px;color:var(--muted)">'+t('kSkinNote')+'</p>':'');
+  }else{
+    infoEl.innerHTML=spk('info')+'<h2>'+t('wTitle')+'</h2><div class="en">'+(lang==='he'?'Human body atlas':'אטלס גוף האדם')+'</div>'+
+      '<div class="blk"><p>'+t('wP1')+'</p></div><div class="blk"><p>'+t('wP2')+'</p></div><div class="blk"><p>'+t('wP3')+'</p></div><p style="font-size:12px;color:var(--muted)">'+t('wDisc')+'</p>';
+  }
+}
+function showWelcome(){infoState={t:'welcome'};renderInfo();}
+function selectOrgan(id){
+  const o=ORG[id];
+  if(!sysVisible(id))showSystem(o.sys,true);
+  selected=id;infoState={t:'organ',id};renderInfo();
+  if(isMobile()&&!quiz.active&&!journey.active&&!cond.active)closeSheet();
+  focusOrgan(id);
+  queueNarr('info');
+}
+function showSystemInfo(k){
+  selected=null;infoState={t:'sys',k};renderInfo();
+  if(k!=='skin'&&!SYS[k].visible)showSystem(k,true);
+  queueNarr('info');
+}
+infoEl.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.org)selectOrgan(b.dataset.org);
+  if(b.dataset.sysinfo)showSystemInfo(b.dataset.sysinfo);
+});
+
+/* floating tag */
+const _v=new T.Vector3();
+function updateTag(){
+  const hide=quiz.active&&quiz.cur&&quiz.cur.type==='find'&&!quiz.done;
+  if(!selected||hide){tag.style.display='none';return;}
+  const box=new T.Box3();ORG[selected].meshes.forEach(m=>box.expandByObject(m));
+  box.getCenter(_v);_v.y=box.max.y;_v.project(camera);
+  const r=renderer.domElement.getBoundingClientRect();
+  if(_v.z>1){tag.style.display='none';return;}
+  tag.style.display='block';tag.textContent=nm(ORG[selected]);
+  tag.style.left=(r.left+(_v.x*.5+.5)*r.width)+'px';tag.style.top=(r.top+(-_v.y*.5+.5)*r.height)+'px';
+}
+
+/* ---- explore pane ---- */
+function buildSystems(){
+  $('syslist').innerHTML=SYS_ORDER.map(k=>{const s=SYSTEMS[k];
+    return '<div class="sys"><span class="sw" style="--c:'+s.color+'"><input type="checkbox" data-sys="'+k+'" aria-label="'+sysName(k)+'" '+(SYS[k].visible?'checked':'')+'><span></span></span><span class="nm">'+sysName(k)+'</span><button class="i" data-info="'+k+'" aria-label="info">i</button></div>';}).join('');
+}
+$('syslist').addEventListener('change',e=>{const k=e.target.dataset.sys;if(!k)return;showSystem(k,e.target.checked);if(selected&&ORG[selected].sys===k&&!e.target.checked){selected=null;showWelcome();}});
+$('syslist').addEventListener('click',e=>{const b=e.target.closest('[data-info]');if(b)showSystemInfo(b.dataset.info);});
+$('bAll').onclick=()=>SYS_ORDER.forEach(k=>showSystem(k,true));
+$('bNone').onclick=()=>{SYS_ORDER.forEach(k=>showSystem(k,k==='skin'));selected=null;showWelcome();};
+$('skinOp').oninput=e=>{setSceneTheme(theme);};
+$('dimChk').onchange=e=>{dimOn=e.target.checked;};
+$('autoChk').onchange=e=>{cam.auto=e.target.checked;};
+$('bReset').onclick=()=>{selected=null;showWelcome();resetCam();};
+const sInp=$('search'),res=$('results');
+function renderSearch(){
+  const q=sInp.value.trim().toLowerCase();
+  if(!q){res.innerHTML='';return;}
+  const m=ORGANS.filter(o=>orgOK(o)&&(o.he.includes(q)||o.en.toLowerCase().includes(q))).slice(0,8);
+  res.innerHTML=m.map(o=>'<li><button data-o="'+o.id+'">'+nm(o)+' <small style="color:var(--muted)">· '+sysName(o.sys)+'</small></button></li>').join('')||'<li style="font-size:13px;color:var(--muted);padding:6px 10px">'+t('noRes')+'</li>';
+}
+sInp.addEventListener('input',renderSearch);
+res.addEventListener('click',e=>{const b=e.target.closest('[data-o]');if(b){selectOrgan(b.dataset.o);res.innerHTML='';sInp.value='';}});
+
+/* ---- simulate pane ---- */
+let curAct='rest';
+function buildActs(){
+  $('acts').innerHTML=ACTIVITIES.map(a=>'<button class="btn'+(a.id===curAct?' on':'')+'" data-a="'+a.id+'">'+t('act_'+a.id)+'</button>').join('');
+  $('simtext').textContent=t('sim_'+curAct);
+}
+$('acts').addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');if(!b)return;
+  const a=ACTIVITIES.find(x=>x.id===b.dataset.a);tgtBpm=a.bpm;tgtBr=a.br;curAct=a.id;buildActs();
+});
+setInterval(()=>{const a=Math.round(bpm),b=Math.round(brpm);$('bpm').textContent=a;$('brpm').textContent=b;$('bpm2').textContent=a;$('brpm2').textContent=b;},200);
+
+/* ---- tabs ---- */
+let activeTab=null;
+function closeSheet(){sheet.style.display='none';activeTab=null;syncNav();}
+function syncNav(){document.querySelectorAll('#nav [data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===activeTab));}
+function openTab(name){
+  if(name==='learn'){openGuide(0);return;}
+  if(activeTab===name){closeSheet();return;}
+  activeTab=name;
+  if(name!=='conditions'&&cond.active)stopCond();
+  ['explore','sim','quiz','journey','conditions'].forEach(n=>{$('p-'+n).style.display=n===name?'block':'none';});
+  sheet.style.display='block';
+  if(name==='quiz')renderQuiz();
+  if(name==='journey')renderJourney();
+  if(name==='conditions')renderCond();
+  syncNav();
+}
+$('nav').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)openTab(b.dataset.tab);});
+$('vitals').addEventListener('click',()=>{if(activeTab!=='sim')openTab('sim');});
+$('vitals').addEventListener('keydown',e=>{if(e.key==='Enter')openTab('sim');});
+
+/* ---- guide modal ---- */
+const modal=$('modal'),mbox=$('modalBox');let guideTab=0,guideBody='';
+function openGuide(tab){
+  guideTab=tab=tab||0;
+  const tabs=STR[lang].gTabs;let body='';
+  if(tab===0)body=t('g0');
+  if(tab===1)body='<h2>'+t('g1')+'</h2><div class="cards">'+SYS_ORDER.map(k=>{const s=SYSTEMS[k];return '<div class="cc" style="border-color:'+s.color+'"><h4>'+sysName(k)+'</h4><p>'+sfld(k,'sum')+'</p><button class="btn" data-gosys="'+k+'">'+t('showInBody')+'</button></div>';}).join('')+'</div>';
+  if(tab===2)body=t('g2');
+  if(tab===3)body='<h2>'+t('g3')+'</h2><ul>'+factList().map(f=>'<li>'+f+'</li>').join('')+'</ul>';
+  mbox.innerHTML='<div class="tabs">'+tabs.map((x,i)=>'<button data-t="'+i+'" class="'+(i===tab?'on':'')+'">'+x+'</button>').join('')+'<span style="margin-inline-start:auto"></span>'+spk('guide')+'<button class="btn" id="mClose">'+t('close')+'</button></div>'+body;
+  guideBody=body;queueNarr('guide');
+  modal.style.display='flex';
+}
+mbox.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.t!=null)openGuide(+b.dataset.t);
+  if(b.id==='mClose'){modal.style.display='none';stopSpeak();}
+  if(b.dataset.gosys){modal.style.display='none';showSystemInfo(b.dataset.gosys);}
+});
+modal.addEventListener('click',e=>{if(e.target===modal){modal.style.display='none';stopSpeak();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')modal.style.display='none';});
+
+/* ===================== QUIZ ===================== */
+const qEl=$('p-quiz');
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+function startQuiz(){
+  if(journey.active)stopJourney();
+  if(cond.active)stopCond();
+  quiz.active=true;quiz.finished=false;quiz.i=0;quiz.score=0;quiz.right=0;quiz.streak=0;
+  document.body.classList.add('quizOn');
+  SYS_ORDER.forEach(k=>showSystem(k,k!=='muscular'&&k!=='reproductive'));
+  selected=null;showWelcome();resetCam();
+  quiz.order=shuffle(ORGANS.filter(orgOK).map(o=>o.id));
+  nextQ();
+}
+function endQuiz(){
+  quiz.active=false;quiz.finished=false;quiz.cur=null;document.body.classList.remove('quizOn');renderQuiz();
+}
+function pickType(){
+  const w=level===1?{find:.4,func:.35,sys:.25}:level===2?{find:.25,func:.15,sys:.15,origin:.2,role:.25}:{find:.15,func:.15,sys:.1,origin:.25,role:.35};
+  const r=Math.random();let acc=0;for(const k in w){acc+=w[k];if(r<acc)return k;}return 'func';
+}
+function qCorrect(c){const o=ORG[c.id];return c.type==='sys'?o.sys:c.type==='origin'?LAYER[c.id]:c.id;}
+function qLabel(c,x){
+  if(c.type==='sys')return sysName(x);
+  if(c.type==='origin')return t('layer_'+x);
+  if(c.type==='role')return fld(ORG[x],'fn');
+  return nm(ORG[x]);
+}
+function nextQ(){
+  if(quiz.i>=quiz.n)return showResult();
+  const id=quiz.order[quiz.i];const o=ORG[id];
+  selected=null;showWelcome();
+  let type=pickType();
+  if(type==='find'&&!sysVisible(id))type='func';
+  if(type==='sys'&&o.amb)type='func';
+  if(type==='origin'&&!LAYER[id])type='role';
+  quiz.cur={type,id};quiz.done=false;quiz.wrong=0;quiz.fb=null;
+  if(type==='find')resetCam();
+  const nd=level===3?4:3;
+  if(type==='func'||type==='role'){
+    const pool=ORGANS.filter(x=>orgOK(x)&&x.id!==id&&x.he!==o.he);
+    const same=shuffle(pool.filter(x=>x.sys===o.sys)),other=shuffle(pool.filter(x=>x.sys!==o.sys));
+    const d=(level>=2?same.concat(other):shuffle(pool)).slice(0,nd);
+    quiz.cur.opts=shuffle([o.id].concat(d.map(x=>x.id)));
+  }
+  if(type==='sys'){const d=shuffle(SYS_ORDER.filter(k=>k!==o.sys&&k!=='skin')).slice(0,3);quiz.cur.opts=shuffle([o.sys].concat(d));}
+  if(type==='origin')quiz.cur.opts=['ecto','meso','endo'];
+  renderQuiz();
+}
+function levelSeg(){return '<div class="sec">'+t('lvlT')+'</div><div class="seg2">'+[1,2,3].map(n=>'<button data-lvl="'+n+'" class="'+(level===n?'on':'')+'">'+t('lvl'+n)+'</button>').join('')+'</div>';}
+function renderQuiz(){
+  if(!quiz.active){
+    qEl.innerHTML='<h3 class="h1">'+t('qIntroT')+'</h3><p class="sub">'+t('qIntroP')+'</p>'+levelSeg()+'<button class="btn pri" id="qStart" style="width:100%;padding:13px;margin-top:16px">'+t('qStart')+'</button>'+(quiz.best?'<p class="sub" style="margin-top:12px">'+t('best')+': '+quiz.best+'</p>':'');
+    return;
+  }
+  if(!quiz.cur){return;}
+  const c=quiz.cur,o=ORG[c.id];
+  let q='',opts='';
+  if(c.type==='find'){q=t('qFind',nm(o));opts='<p class="sub">'+t('qFindHint')+'</p>';}
+  else if(c.type==='func'){q=t('qClue',fld(o,'hint'));}
+  else if(c.type==='sys'){q=t('qWhichSys',nm(o));}
+  else if(c.type==='role'){q=t('qRole',nm(o));}
+  else{q=t('qOrigin',nm(o));}
+  if(c.opts){
+    const correct=qCorrect(c);
+    opts='<div class="opts">'+c.opts.map(x=>{
+      let cls='';if(quiz.done){if(x===correct)cls='good';else if(x===c.picked)cls='bad';}
+      return '<button class="'+cls+'" data-ans="'+x+'" '+(quiz.done?'disabled':'')+'>'+qLabel(c,x)+'</button>';}).join('')+'</div>';
+  }
+  const fb=quiz.fb?'<div class="fb '+(quiz.fb.ok?'good':'bad')+'">'+quiz.fb.html+'</div>':'<div class="fb"></div>';
+  let act='';
+  if(quiz.done)act='<button class="btn pri" id="qNext" style="width:100%">'+(quiz.i+1>=quiz.n?t('toRes'):t('next'))+'</button>';
+  else if(c.type==='find')act='<button class="btn" id="qSkip">'+t('skip')+'</button>';
+  qEl.innerHTML='<div class="qh"><span>'+t('qOf',quiz.i+1,quiz.n)+'</span><span>'+t('qScore')+': <b>'+quiz.score+'</b>'+(quiz.streak>1?' · '+t('qStreak')+' '+quiz.streak:'')+'</span></div>'+
+    '<div class="bar"><i style="width:'+(quiz.i/quiz.n*100)+'%"></i></div><div class="qt">'+q+'</div>'+opts+fb+'<div class="row">'+act+'</div>'+
+    '<div class="row"><button class="btn" id="qClose" style="font-size:13px">'+t('qEnd')+'</button></div>';
+}
+qEl.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.id==='qStart')startQuiz();
+  if(b.dataset.ans&&!quiz.done)answerMC(b.dataset.ans);
+  if(b.id==='qNext'){quiz.i++;nextQ();}
+  if(b.id==='qSkip')revealFind(true);
+  if(b.id==='qAgain')startQuiz();
+  if(b.id==='qClose')endQuiz();
+});
+function award(base){const bonus=Math.min(quiz.streak,5);quiz.score+=base+bonus;quiz.streak++;quiz.right++;return base+bonus;}
+function setFb(ok,key,...a){quiz.fb={ok,key,a};quiz.fb.html=t(key,...a);quiz.done=true;}
+function answerMC(ans){
+  const c=quiz.cur,o=ORG[c.id];const correct=qCorrect(c);c.picked=ans;
+  if(ans===correct){setFb(true,'right',award(10+(level-1)*2));}
+  else{quiz.streak=0;setFb(false,'wrongAns',qLabel(c,correct));}
+  selectOrgan(c.id);renderQuiz();
+}
+function answerFind(id){
+  const c=quiz.cur,o=ORG[c.id];
+  if(id===c.id){setFb(true,'right',award([10,6,3,0][Math.min(quiz.wrong,3)]));selectOrgan(c.id);renderQuiz();return;}
+  quiz.wrong++;quiz.streak=0;
+  if(quiz.wrong>=3){revealFind(false);return;}
+  quiz.fb={ok:false,key:'thatsX',a:[nm(ORG[id]),quiz.wrong>=2?sysName(o.sys):''],html:''};
+  quiz.fb.html=t('thatsX',...quiz.fb.a);
+  renderQuiz();
+}
+function revealFind(skipped){
+  const o=ORG[quiz.cur.id];quiz.streak=0;setFb(false,'revealed',skipped,nm(o));
+  selectOrgan(o.id);renderQuiz();
+}
+function showResult(){
+  quiz.cur=null;quiz.best=Math.max(quiz.best,quiz.score);quiz.finished=true;
+  selected=null;showWelcome();resetCam();document.body.classList.remove('quizOn');
+  renderResult();
+}
+function renderResult(){
+  const pct=quiz.right/quiz.n;const msg=pct>=.8?t('m1'):pct>=.5?t('m2'):t('m3');
+  qEl.innerHTML='<div class="qh"><span>'+t('done')+'</span><span>'+t('best')+': '+quiz.best+'</span></div><div class="big">'+quiz.score+'</div><p class="sub" style="margin-top:6px">'+t('pts')+' · '+t('correctOf',quiz.right,quiz.n)+'</p><p>'+msg+'</p><div class="row"><button class="btn pri" id="qAgain">'+t('again')+'</button><button class="btn" id="qClose">'+t('close')+'</button></div>';
+}
+
+/* ===================== LANGUAGE & THEME ===================== */
+function applyLang(){
+  if(typeof stopSpeak==='function')stopSpeak();
+  document.documentElement.lang=lang;document.documentElement.dir=lang==='he'?'rtl':'ltr';
+  document.title=t('app');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{el.placeholder=t(el.dataset.i18nPh);});
+  document.querySelectorAll('#langseg button').forEach(b=>b.classList.toggle('on',b.dataset.lang===lang));
+  buildSystems();buildActs();renderSearch();renderInfo();if(typeof buildThemeMenu==='function'&&THEMES)buildThemeMenu();renderSettings();renderJourney();renderCond();if(typeof syncNarrBtn==='function')syncNarrBtn();
+  if(quiz.cur||!quiz.active){if(quiz.finished&&!quiz.active&&false){}renderQuiz();}
+  if(quiz.active&&!quiz.cur&&quiz.finished)renderResult();
+  if(modal.style.display==='flex')openGuide(guideTab);
+  try{localStorage.setItem('lang',lang);}catch(e){}
+}
+$('langseg').addEventListener('click',e=>{const b=e.target.closest('[data-lang]');if(b&&b.dataset.lang!==lang){lang=b.dataset.lang;applyLang();}});
+const LIGHT_BASE={card:'rgba(255,255,255,.86)',card2:'rgba(15,27,45,.045)',line:'rgba(15,27,45,.1)',shadow:'0 18px 50px -18px rgba(25,45,95,.35)',gold:'#b8860b',factbg:'rgba(255,184,0,.14)',onaccent:'#fff'};
+const DARK_BASE={card2:'rgba(255,255,255,.06)',line:'rgba(255,255,255,.12)',shadow:'0 18px 50px -18px rgba(0,0,0,.7)',gold:'#ffd25e',factbg:'rgba(255,210,94,.1)',onaccent:'#fff'};
+const THEMES={
+ light:{he:'בהיר',en:'Light',v:Object.assign({},LIGHT_BASE,{bg1:'#f6f8fc',bg2:'#d9e3f1',ink:'#0f1b2d',muted:'#5d6b82',accent:'#ff3b5c',accent2:'#2b6cff',modal:'#f6f8fc'}),scene:{ring:0xff3b5c,ringMul:.7,disc:0xffffff,discOp:.75,skin:0x7d8fb0,skinMul:1.35}},
+ dark:{he:'כהה',en:'Dark',v:Object.assign({},DARK_BASE,{bg1:'#1a2745',bg2:'#070b16',card:'rgba(20,31,56,.84)',ink:'#eaf0ff',muted:'#9fb0cf',accent:'#ff5a78',accent2:'#6b97ff',modal:'#131d36'}),scene:{ring:0x5ad1c8,ringMul:1,disc:0x16264a,discOp:.7,skin:0xe9b99a,skinMul:1}},
+ ocean:{he:'אוקיינוס',en:'Ocean',v:Object.assign({},LIGHT_BASE,{bg1:'#eef9fb',bg2:'#bfe0e8',ink:'#08323d',muted:'#4a7280',accent:'#0e9aa7',accent2:'#2b6cff',modal:'#eef9fb',shadow:'0 18px 50px -18px rgba(10,80,100,.38)'}),scene:{ring:0x0e9aa7,ringMul:.8,disc:0xffffff,discOp:.75,skin:0x5f8fa0,skinMul:1.35}},
+ rose:{he:'ורוד',en:'Rose',v:Object.assign({},LIGHT_BASE,{bg1:'#fff5f7',bg2:'#f3cfd9',ink:'#3a1424',muted:'#8a5a69',accent:'#e0245e',accent2:'#8b5cf6',modal:'#fff5f7',shadow:'0 18px 50px -18px rgba(150,30,70,.3)'}),scene:{ring:0xe0245e,ringMul:.7,disc:0xffffff,discOp:.75,skin:0xb07a8c,skinMul:1.35}},
+ forest:{he:'יער',en:'Forest',v:Object.assign({},DARK_BASE,{bg1:'#17352b',bg2:'#06120d',card:'rgba(16,40,31,.86)',ink:'#e6f6ec',muted:'#98bba8',accent:'#4ade80',accent2:'#5eead4',onaccent:'#06210f',modal:'#10281f'}),scene:{ring:0x4ade80,ringMul:1,disc:0x0f2a20,discOp:.75,skin:0xcfe8d6,skinMul:1}},
+ ember:{he:'גחלים',en:'Ember',v:Object.assign({},DARK_BASE,{bg1:'#3a2518',bg2:'#120a06',card:'rgba(48,30,20,.86)',ink:'#fff1e3',muted:'#cdb09a',accent:'#ff8a3d',accent2:'#ffc857',onaccent:'#1b0d02',modal:'#2a1a10'}),scene:{ring:0xff8a3d,ringMul:1,disc:0x2a170c,discOp:.75,skin:0xf0c9a0,skinMul:1}}
+};
+if(!THEMES[theme])theme='light';
+function applyTheme(){
+  const th=THEMES[theme];
+  Object.keys(th.v).forEach(k=>document.body.style.setProperty('--'+k,th.v[k]));
+  document.body.dataset.theme=theme;setSceneTheme(theme);buildThemeMenu();
+  try{localStorage.setItem('theme',theme);}catch(e){}
+}
+const themeMenu=$('themeMenu');
+function buildThemeMenu(){
+  themeMenu.innerHTML='<h4>'+(lang==='he'?'ערכת נושא':'Theme')+'</h4><div class="grid">'+Object.keys(THEMES).map(k=>{const v=THEMES[k].v;
+    return '<button data-th="'+k+'" class="'+(k===theme?'on':'')+'"><i style="background:linear-gradient(135deg,'+v.bg1+' 50%,'+v.accent+' 50%)"></i>'+THEMES[k][lang]+'</button>';}).join('')+'</div>';
+}
+themeMenu.addEventListener('click',e=>{const b=e.target.closest('[data-th]');if(b){theme=b.dataset.th;applyTheme();}});
+$('bTheme').onclick=e=>{e.stopPropagation();themeMenu.style.display=themeMenu.style.display==='block'?'none':'block';};
+document.addEventListener('click',e=>{if(!themeMenu.contains(e.target))themeMenu.style.display='none';});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')themeMenu.style.display='none';});
+
+/* ===================== LEVEL, BODY, JOURNEYS ===================== */
+function renderSettings(){
+  const lv=[1,2,3].map(n=>'<button data-lvl="'+n+'" class="'+(level===n?'on':'')+'">'+t('lvl'+n)+'</button>').join('');
+  const sx=['f','m'].map(s=>'<button data-sex="'+s+'" class="'+(sexSel===s?'on':'')+'">'+t(s==='f'?'bodyF':'bodyM')+'</button>').join('');
+  $('settingsBox').innerHTML='<div class="sec" style="margin-top:14px">'+t('lvlT')+'</div><div class="seg2">'+lv+'</div><div class="sec">'+t('bodyT')+'</div><div class="seg2">'+sx+'</div>';
+}
+function setLevel(n){
+  level=n;try{localStorage.setItem('level',n);}catch(e){}
+  renderSettings();renderInfo();if(!quiz.active)renderQuiz();
+}
+function setSex(s){
+  applySex(s);renderSettings();
+  if(selected&&!orgOK(ORG[selected])){selected=null;showWelcome();}else renderInfo();
+  if(!quiz.active)renderQuiz();
+}
+document.addEventListener('click',e=>{
+  const l=e.target.closest('[data-lvl]');if(l)setLevel(+l.dataset.lvl);
+  const s=e.target.closest('[data-sex]');if(s)setSex(s.dataset.sex);
+});
+
+const JOURNEYS={
+ food:{css:'#ff9f1c',color:0xff9f1c,
+  he:{title:`מסע של ביס אוכל`,desc:`עקבו אחרי ביס מהפה ועד סוף מערכת העיכול.`},
+  en:{title:`Follow a bite of food`,desc:`Follow one bite from the mouth to the end of the digestive system.`},
+  steps:[
+   {o:'teeth',he:`המסע מתחיל בפה. השיניים חותכות וטוחנות את הביס לחתיכות קטנות.`,en:`The journey starts in the mouth. The teeth cut and grind the bite into small pieces.`},
+   {o:'tongue',he:`הלשון מערבבת את האוכל ברוק, שמתחיל לפרק עמילן, ודוחפת אותו לאחור לקראת הבליעה.`,en:`The tongue mixes the food with saliva, which starts breaking down starch, and pushes it back to be swallowed.`},
+   {o:'pharynx',he:`בולעים. הלוע מכוון את האוכל אל הושט, ומכסה סחוסי סוגר את קנה הנשימה כדי שלא נחנק.`,en:`You swallow. The throat sends the food toward the esophagus while a flap closes the windpipe so you do not choke.`},
+   {o:'esophagus',he:`גלי התכווצות של השריר דוחפים את האוכל כלפי מטה. זה לוקח כמה שניות.`,en:`Waves of muscle contraction push the food downward. This takes a few seconds.`},
+   {o:'stomach',he:`חומצה ואנזימים הופכים את האוכל לעיסה נוזלית סמיכה. הוא נשאר כאן בדרך כלל כמה שעות.`,en:`Acid and enzymes turn the food into a thick liquid. It usually stays here for a few hours.`},
+   {o:'liver',he:`הכבד מייצר מרה, שעוזרת לפרק שומנים, ואחר כך יעבד את החומרים המזינים שנספגו.`,en:`The liver makes bile, which helps break down fats, and later processes the nutrients that get absorbed.`},
+   {o:'pancreas',he:`הלבלב שולח למעי אנזימים שמפרקים פחמימות, חלבונים ושומנים.`,en:`The pancreas sends enzymes into the intestine that break down carbohydrates, proteins and fats.`},
+   {o:'smallint',he:`כאן נספגים רוב החומרים המזינים אל הדם, ומשם הם מגיעים לכל תא בגוף.`,en:`Most nutrients are absorbed into the blood here, and from there they reach every cell in the body.`},
+   {o:'largeint',he:`המעי הגס סופג מים, וחיידקים ידידותיים עוזרים לעכל שאריות. מה שנשאר יוצא מהגוף.`,en:`The large intestine absorbs water, and friendly bacteria help digest the leftovers. What remains leaves the body.`}
+  ]},
+ blood:{css:'#ff2a3d',color:0xff2a3d,
+  he:{title:`מסע של תא דם אדום`,desc:`עקבו אחרי תא דם אדום שנושא חמצן סביב הגוף.`},
+  en:{title:`Follow a red blood cell`,desc:`Follow a red blood cell as it carries oxygen around the body.`},
+  steps:[
+   {o:'heart',he:`תא הדם האדום שלנו נמצא בצד ימין של הלב. הוא דל בחמצן ומוכן לצאת לריאות.`,en:`Our red blood cell is in the right side of the heart. It is low in oxygen and about to be sent to the lungs.`},
+   {o:'lungs',he:`בריאות התא משחרר פחמן דו־חמצני ואוסף חמצן בעזרת חלבון בשם המוגלובין. הוא הופך לאדום בהיר.`,en:`In the lungs the cell drops off carbon dioxide and picks up oxygen using a protein called hemoglobin. It turns bright red.`},
+   {o:'heart',he:`חזרה ללב, הפעם לצד שמאל. כיווץ חזק של השריר שולח אותו אל אבי העורקים.`,en:`Back to the heart, this time the left side. A powerful squeeze sends it into the aorta.`},
+   {o:'arteries',he:`התא דוהר בעורקים, שמתפצלים לכלים קטנים יותר ויותר עד שמגיעים לנימים.`,en:`The cell races through the arteries, which branch into smaller and smaller vessels until they reach the capillaries.`},
+   {o:'quads',he:`בשרירי הרגל התא משחרר חמצן לתאי השריר ואוסף פחמן דו־חמצני.`,en:`In the leg muscles the cell releases oxygen to muscle cells and collects carbon dioxide.`},
+   {o:'kidneys',he:`בדרך הדם עובר בכליות. הן מסננות אותו, ואם החמצן נמוך מדי הן שולחות הורמון שמגביר ייצור של תאי דם אדומים.`,en:`On its way the blood passes through the kidneys. They filter it, and if oxygen runs low they release a hormone that boosts red blood cell production.`},
+   {o:'veins',he:`התא כבר דל בחמצן וחוזר ללב דרך הורידים. שסתומים קטנים מונעים ממנו לזרום אחורה.`,en:`The cell is low in oxygen again and returns to the heart through the veins. Tiny valves stop it flowing backwards.`},
+   {o:'spleen',he:`אחרי כ־120 יום תאי דם אדומים ישנים מסולקים, בעיקר בטחול ובכבד, והברזל שלהם נשמר לשימוש חוזר.`,en:`After about 120 days old red blood cells are removed, mainly in the spleen and liver, and their iron is saved for reuse.`},
+   {o:'sternum',he:`בינתיים, במח העצם של עצמות כמו עצם החזה, נוצרים כל הזמן תאי דם חדשים: כ־2 מיליון בכל שנייה.`,en:`Meanwhile, bone marrow in bones such as the breastbone keeps making new blood cells: around 2 million every second.`}
+  ]}
+};
+Object.assign(JOURNEYS,{
+ route:{css:'#e63946',color:0xe63946,
+  he:{title:`מסלול הדם`,desc:`עקבו אחרי מעגל הדם המלא: לב, ריאות, גוף וחזרה.`},
+  en:{title:`The route of the blood`,desc:`Follow the full circuit of the blood: heart, lungs, body and back.`},
+  steps:[
+   {o:'veins',he:`הדם דל החמצן חוזר מהגוף דרך הורידים הגדולים אל צד ימין של הלב.`,en:`Oxygen-poor blood returns from the body through the large veins into the right side of the heart.`},
+   {o:'heart',he:`הדם נכנס לפרוזדור הימני, עובר לחדר הימני, ומשם הלב שולח אותו לריאות.`,en:`Blood enters the right atrium, passes to the right ventricle, and from there the heart sends it to the lungs.`},
+   {o:'lungs',he:`בריאות הדם משחרר פחמן דו־חמצני ואוסף חמצן. זה המעגל הקטן של הדם.`,en:`In the lungs the blood drops off carbon dioxide and picks up oxygen. This is the small circuit.`},
+   {o:'heart',he:`הדם העשיר בחמצן חוזר לפרוזדור השמאלי ועובר לחדר השמאלי, החדר החזק ביותר, ששואב אותו לכל הגוף.`,en:`Oxygen-rich blood returns to the left atrium and passes to the left ventricle, the strongest chamber, which pumps it to the whole body.`},
+   {o:'arteries',he:`הדם יוצא דרך אבי העורקים, העורק הגדול, שמתפצל לעורקים קטנים יותר. זה המעגל הגדול.`,en:`Blood leaves through the aorta, the main artery, which branches into smaller and smaller arteries. This is the large circuit.`},
+   {o:'brain',he:`המוח מקבל בערך חמישית מהדם של הגוף, אף שהוא קטן ממנו בהרבה.`,en:`The brain receives about a fifth of the body's blood, even though it is a small part of the body.`},
+   {o:'kidneys',he:`הכליות מסננות את הדם, מסלקות פסולת ומווסתות מים ומלחים.`,en:`The kidneys filter the blood, remove waste and regulate water and salts.`},
+   {o:'quads',he:`בשרירים הדם משחרר חמצן ואוסף פחמן דו־חמצני דרך נימים דקים.`,en:`In the muscles the blood releases oxygen and collects carbon dioxide through tiny capillaries.`},
+   {o:'veins',he:`הדם חוזר בהורידים אל הלב, ומסתיים סיבוב שלם שבמנוחה אורך בערך דקה.`,en:`Blood returns in the veins to the heart, completing a full loop that at rest takes about a minute.`}
+  ]},
+ oxygen:{css:'#4cc9f0',color:0x4cc9f0,
+  he:{title:`מסע של מולקולת חמצן`,desc:`מהנשימה הראשונה ועד התא, ואיך הפחמן הדו־חמצני חוזר החוצה.`},
+  en:{title:`Follow an oxygen molecule`,desc:`From the first breath to the cell, and how carbon dioxide comes back out.`},
+  steps:[
+   {o:'nose',he:`שואפים. האוויר נכנס דרך האף, שמחמם, מלחלח ומסנן אותו.`,en:`You breathe in. Air enters through the nose, which warms, moistens and filters it.`},
+   {o:'pharynx',he:`האוויר עובר בלוע, צומת האוויר והמזון.`,en:`The air passes through the throat, the junction of air and food.`},
+   {o:'larynx',he:`עובר דרך תיבת הקול ופתח המיתרים, בדרך אל קנה הנשימה.`,en:`It passes through the voice box and the gap between the vocal cords, on its way to the windpipe.`},
+   {o:'trachea',he:`קנה הנשימה מתפצל לשני סימפונות, אחד לכל ריאה.`,en:`The windpipe splits into two bronchi, one for each lung.`},
+   {o:'lungs',he:`בנאדיות, שקיקי האוויר הזעירים, החמצן עובר דרך דופן דקה אל נימי הדם.`,en:`In the alveoli, the tiny air sacs, oxygen crosses a very thin wall into the blood capillaries.`},
+   {o:'arteries',he:`בדם החמצן נקשר להמוגלובין בתאי הדם האדומים, והדם מוביל אותו בעורקים לכל הגוף.`,en:`In the blood, oxygen binds to hemoglobin in red blood cells, and the arteries carry it around the body.`},
+   {o:'quads',he:`בתא השריר, החמצן עוזר "לשרוף" סוכר ולשחרר אנרגיה. פחמן דו־חמצני נוצר כתוצר לוואי.`,en:`In a muscle cell, oxygen helps "burn" sugar to release energy. Carbon dioxide is made as a by-product.`},
+   {o:'veins',he:`הפחמן הדו־חמצני נאסף בדם וחוזר ללב ולריאות דרך הורידים.`,en:`The carbon dioxide is collected by the blood and travels back to the heart and lungs through the veins.`},
+   {o:'lungs',he:`בנשיפה הפחמן הדו־חמצני יוצא מהריאות ומהגוף. המעגל נסגר.`,en:`When you breathe out, the carbon dioxide leaves the lungs and the body. The loop is complete.`}
+  ]},
+ water:{css:'#38b6ff',color:0x38b6ff,
+  he:{title:`מסע של לגימת מים`,desc:`מהפה ועד לשלפוחית השתן.`},
+  en:{title:`Follow a sip of water`,desc:`From the mouth to the bladder.`},
+  steps:[
+   {o:'tongue',he:`לוגמים מים. הלשון דוחפת אותם לאחור והבליעה מתחילה.`,en:`You take a sip. The tongue pushes the water back and the swallow begins.`},
+   {o:'esophagus',he:`הושט מוביל את המים אל הקיבה תוך שניות.`,en:`The esophagus carries the water to the stomach within seconds.`},
+   {o:'stomach',he:`מים עוברים מהקיבה למעי די מהר, במיוחד כשהקיבה ריקה.`,en:`Water moves on from the stomach to the intestine fairly quickly, especially when the stomach is empty.`},
+   {o:'smallint',he:`רוב המים נספגים במעי הדק אל הדם.`,en:`Most of the water is absorbed from the small intestine into the blood.`},
+   {o:'largeint',he:`המעי הגס סופג את המים שנשארו, כדי שהגוף לא יאבד אותם.`,en:`The large intestine absorbs the water that remains, so the body does not lose it.`},
+   {o:'kidneys',he:`הכליות מסננות את הדם ומחליטות כמה מים להחזיר וכמה להפריש. אם שתיתם הרבה, יופרש יותר.`,en:`The kidneys filter the blood and decide how much water to keep and how much to release. If you drank a lot, more is released.`},
+   {o:'bladder',he:`העודף נאגר בשלפוחית השתן עד שמתרוקנים.`,en:`The excess is stored in the bladder until you empty it.`}
+  ]},
+ reflex:{css:'#ffd60a',color:0xffd60a,
+  he:{title:`אות עצבי: נוגעים בסיר חם`,desc:`איך הגוף מושך את היד לפני שהמוח מספיק להבין.`},
+  en:{title:`A nerve signal: touching a hot pan`,desc:`How the body pulls your hand away before the brain catches up.`},
+  steps:[
+   {o:'hand',he:`היד נוגעת בסיר חם. קולטנים בעור מזהים את החום ומתחילים לשלוח אות חשמלי.`,en:`Your hand touches a hot pan. Receptors in the skin detect the heat and start sending an electrical signal.`},
+   {o:'nerves',he:`האות נע לאורך עצבים היקפיים במהירות של עשרות מטרים בשנייה.`,en:`The signal travels along peripheral nerves at tens of metres per second.`},
+   {o:'cord',he:`בחוט השדרה האות עובר ישר לתא עצב שמפעיל שרירים. זה רפלקס: אין צורך לחכות למוח.`,en:`In the spinal cord the signal passes straight to a nerve cell that activates muscles. This is a reflex: no need to wait for the brain.`},
+   {o:'biceps',he:`שרירי הזרוע מתכווצים, והיד נמשכת מהסיר תוך חלקיק שנייה.`,en:`The arm muscles contract and your hand is pulled away in a fraction of a second.`},
+   {o:'brain',he:`רק עכשיו האות מגיע למוח, ואז מרגישים כאב ומבינים מה קרה.`,en:`Only now does the signal reach the brain, and then you feel the pain and understand what happened.`}
+  ]},
+ adrenaline:{css:'#ff6d00',color:0xff6d00,
+  he:{title:`גל אדרנלין`,desc:`מה קורה בגוף ברגע של פחד או התרגשות.`},
+  en:{title:`An adrenaline rush`,desc:`What happens in the body in a moment of fear or excitement.`},
+  steps:[
+   {o:'brain',he:`המוח מזהה איום, למשל רעש פתאומי, ושולח אות חירום בעצבים.`,en:`The brain detects a threat, such as a sudden noise, and sends an emergency signal through the nerves.`},
+   {o:'adrenals',he:`יותרות הכליה משחררות אדרנלין לדם.`,en:`The adrenal glands release adrenaline into the blood.`},
+   {o:'heart',he:`הלב פועם מהר וחזק יותר כדי לשלוח יותר דם לשרירים.`,en:`The heart beats faster and harder to send more blood to the muscles.`},
+   {o:'lungs',he:`דרכי האוויר נפתחות ונושמים מהר יותר, כדי להכניס יותר חמצן.`,en:`The airways widen and you breathe faster to take in more oxygen.`},
+   {o:'liver',he:`הכבד משחרר סוכר לדם, דלק מהיר לשרירים ולמוח.`,en:`The liver releases sugar into the blood, quick fuel for the muscles and brain.`},
+   {o:'quads',he:`השרירים מוכנים להילחם או לברוח. אחרי שהאיום חולף, הדופק חוזר לאט למצב רגיל.`,en:`The muscles are ready to fight or flee. After the threat passes, the heartbeat slowly returns to normal.`}
+  ]},
+ hearing:{css:'#b388ff',color:0xb388ff,
+  he:{title:`מסע של צליל`,desc:`איך גלי קול הופכים לשמיעה.`},
+  en:{title:`Follow a sound`,desc:`How sound waves become hearing.`},
+  steps:[
+   {o:'ears',he:`האוזן החיצונית אוספת גלי קול ומובילה אותם לעור התוף, קרום דק שמתחיל לרטוט.`,en:`The outer ear collects sound waves and guides them to the eardrum, a thin membrane that starts to vibrate.`},
+   {o:'ears',he:`שלוש עצמות זעירות, הפטיש, הסדן והארכובה, מגבירות את הרעידות ומעבירות אותן אל האוזן הפנימית.`,en:`Three tiny bones, the hammer, anvil and stirrup, amplify the vibrations and pass them to the inner ear.`},
+   {o:'ears',he:`בשבלול, מבנה בצורת חילזון מלא נוזל, תאי שיער זעירים מתכופפים והופכים את הרעידות לאותות חשמליים.`,en:`In the cochlea, a snail-shaped, fluid-filled structure, tiny hair cells bend and turn the vibrations into electrical signals.`},
+   {o:'nerves',he:`עצב השמיעה מעביר את האותות לעבר המוח.`,en:`The hearing nerve carries the signals toward the brain.`},
+   {o:'brain',he:`המוח מפרש את האותות כצליל: מילים, מוזיקה, או רעש.`,en:`The brain interprets the signals as sound: words, music or noise.`}
+  ]},
+ vision:{css:'#06d6a0',color:0x06d6a0,
+  he:{title:`מסע של אור`,desc:`איך אור הופך לתמונה במוח.`},
+  en:{title:`Follow a ray of light`,desc:`How light becomes a picture in the brain.`},
+  steps:[
+   {o:'eyes',he:`האור נכנס דרך האישון, והעדשה ממקדת אותו על הרשתית שבגב העין.`,en:`Light enters through the pupil, and the lens focuses it onto the retina at the back of the eye.`},
+   {o:'eyes',he:`ברשתית יש תאי קולטנים: אחדים רגישים לאור חלש, ואחרים לצבעים. הם הופכים אור לאותות חשמליים. התמונה על הרשתית הפוכה.`,en:`The retina has receptor cells: some sensitive to dim light, others to colour. They turn light into electrical signals. The image on the retina is upside down.`},
+   {o:'nerves',he:`עצב הראייה מעביר את האותות מהעין לעבר המוח.`,en:`The optic nerve carries the signals from the eye toward the brain.`},
+   {o:'brain',he:`בחלק האחורי של המוח האותות מעובדים לתמונה, והמוח הופך אותה חזרה ומשלים פרטים.`,en:`At the back of the brain the signals are processed into a picture; the brain flips it the right way up and fills in details.`}
+  ]}
+});
+const journey={active:false,id:null,i:0,done:false};
+const jPane=$('p-journey');
+let marker=null;const mTarget=new T.Vector3();
+function ensureMarker(){
+  if(marker)return;
+  const g=new T.Group();
+  const core=new T.Mesh(new T.SphereGeometry(.2,20,16),new T.MeshBasicMaterial({color:0xff9f1c,depthTest:false,transparent:true,opacity:.95}));
+  const halo=new T.Mesh(new T.SphereGeometry(.4,20,16),new T.MeshBasicMaterial({color:0xff9f1c,depthTest:false,transparent:true,opacity:.28}));
+  core.renderOrder=30;halo.renderOrder=29;g.add(core,halo);g.userData={core,halo};scene.add(g);marker=g;
+}
+function journeyTick(dt,time){
+  if(!marker)return;
+  marker.visible=journey.active&&!journey.done;
+  if(!marker.visible)return;
+  marker.position.lerp(mTarget,1-Math.exp(-dt*2.6));
+  marker.scale.setScalar(1+.18*Math.sin(time*6));
+}
+function setStep(i){
+  const j=JOURNEYS[journey.id],s=j.steps[i];journey.i=i;
+  selectOrgan(s.o);
+  const box=new T.Box3();ORG[s.o].meshes.forEach(m=>box.expandByObject(m));box.getCenter(mTarget);
+  if(i===0)marker.position.copy(mTarget);
+  renderJourney();runStep('journey');
+}
+function startJourney(k){
+  if(quiz.active)endQuiz();
+  if(cond.active)stopCond();
+  ensureMarker();const j=JOURNEYS[k];
+  marker.userData.core.material.color.setHex(j.color);marker.userData.halo.material.color.setHex(j.color);
+  journey.active=true;journey.id=k;journey.done=false;
+  setStep(0);
+}
+function stopJourney(){
+  journey.active=false;journey.done=false;selected=null;showWelcome();resetCam();renderJourney();
+}
+function renderJourney(){
+  if(!journey.active){
+    jPane.innerHTML='<h3 class="h1">'+t('jTitle')+'</h3><p class="sub">'+t('jSub')+'</p>'+autoOpt()+Object.keys(JOURNEYS).map(k=>{const j=JOURNEYS[k];
+      return '<button class="jcard" data-jstart="'+k+'"><b style="display:flex;align-items:center;gap:8px"><i style="width:12px;height:12px;border-radius:50%;background:'+j.css+'"></i>'+j[lang].title+'</b><span class="sub" style="display:block;margin:6px 0 0">'+j[lang].desc+'</span></button>';}).join('');
+    return;
+  }
+  const j=JOURNEYS[journey.id],n=j.steps.length;
+  if(journey.done){
+    jPane.innerHTML='<h3 class="h1">'+t('jDone')+'</h3><div class="bar"><i style="width:100%;background:'+j.css+'"></i></div><p>'+t('jDoneP')+'</p><div class="row"><button class="btn pri" data-jstart="'+journey.id+'">'+t('jAgain')+'</button><button class="btn" data-jstop="1">'+t('jOther')+'</button></div>';
+    return;
+  }
+  const s=j.steps[journey.i],o=ORG[s.o];
+  jPane.innerHTML='<div class="qh"><span>'+j[lang].title+'</span><span>'+t('jStep',journey.i+1,n)+'</span></div><div class="bar"><i style="width:'+((journey.i+1)/n*100)+'%;background:'+j.css+'"></i></div>'+
+    '<h3 class="h1">'+spk('journey')+nm(o)+'</h3><p style="line-height:1.7;margin:8px 0 16px">'+s[lang]+'</p>'+
+    autoOpt()+'<div class="row"><button class="btn" data-jprev="1"'+(journey.i===0?' disabled style="opacity:.4"':'')+'>'+t('jPrev')+'</button><button class="btn pri" data-jnext="1">'+(journey.i+1>=n?t('jFinish'):t('jNext'))+'</button></div>'+
+    '<div class="row"><button class="btn" data-jstop="1" style="font-size:13px">'+t('jStop')+'</button></div>';
+}
+jPane.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||b.disabled)return;
+  if(b.dataset.jstart)startJourney(b.dataset.jstart);
+  if(b.dataset.jprev)setStep(Math.max(0,journey.i-1));
+  if(b.dataset.jnext){
+    const n=JOURNEYS[journey.id].steps.length;
+    if(journey.i+1>=n){journey.done=true;selected=null;showWelcome();resetCam();renderJourney();}else setStep(journey.i+1);
+  }
+  if(b.dataset.jstop)stopJourney();
+});
+
+/* ===================== CONDITIONS ===================== */
+const CONDS=[
+ {id:'heartattack',color:'#e63946',
+  he:{title:`התקף לב`,short:`כלי דם שמזינים את שריר הלב נחסם, ושריר הלב מתחיל להיפגע.`,
+   signs:[`לחץ, כובד או כאב באמצע החזה שנמשך יותר מכמה דקות`,`הקרנה לזרוע שמאל, ללסת או לגב`,`קוצר נשימה, זיעה קרה, בחילה`,`אצל נשים (ואצל חולי סוכרת) התסמינים יכולים להיות פחות טיפוסיים: עייפות חריגה, בחילה, כאב בגב או בלסת`],
+   act:[`הזעיקו עזרה רפואית מיד. אל תנסו להגיע לבד לבית החולים`,`שבו או שכבו בנחת ואל תתאמצו`,`אם אין אלרגיה ובהנחיית המוקדן, לעיסת אספירין למבוגר יכולה לעזור`,`היו מוכנים להתחיל החייאה אם האדם מתמוטט ולא נושם`],
+   prev:[`לא לעשן`,`לשמור על לחץ דם, כולסטרול וסוכר בטווח תקין`,`פעילות גופנית סדירה ותזונה מאוזנת`]},
+  en:{title:`Heart attack`,short:`A blood vessel feeding the heart muscle becomes blocked, and the heart muscle starts to be damaged.`,
+   signs:[`Pressure, heaviness or pain in the middle of the chest lasting more than a few minutes`,`Pain spreading to the left arm, jaw or back`,`Shortness of breath, cold sweat, nausea`,`In women (and people with diabetes) symptoms can be less typical: unusual tiredness, nausea, back or jaw pain`],
+   act:[`Call emergency services immediately. Do not drive yourself to hospital`,`Sit or lie down calmly and avoid effort`,`If you are not allergic and the dispatcher advises it, chewing an aspirin (adult) can help`,`Be ready to start CPR if the person collapses and is not breathing`],
+   prev:[`Do not smoke`,`Keep blood pressure, cholesterol and sugar in a healthy range`,`Exercise regularly and eat a balanced diet`]},
+  steps:[
+   {o:['arteries'],v:[72,14],he:`במשך שנים נוצרות בדפנות עורקי הכלילית משקעים של שומן וכולסטרול (פלאק). העורק הולך ומצטמצם.`,en:`Over the years, fatty deposits and cholesterol (plaque) build up in the walls of the coronary arteries. The artery slowly narrows.`},
+   {o:['arteries','heart'],v:[95,18],he:`הפלאק נסדק, ובמקום נוצרת קריש דם. הקריש חוסם את העורק ומנתק אספקת דם לחלק משריר הלב.`,en:`The plaque cracks and a blood clot forms on it. The clot blocks the artery and cuts off the blood supply to part of the heart muscle.`},
+   {o:['heart'],v:[110,24],he:`שריר שלא מקבל חמצן מתחיל להיפגע בתוך דקות. מרגישים לחץ בחזה, והלב עלול לפעום בקצב לא תקין.`,en:`Muscle that gets no oxygen begins to be damaged within minutes. You feel pressure in the chest, and the heart may beat abnormally.`},
+   {o:['heart','arteries'],v:[85,16],he:`הטיפול: לפתוח את העורק מהר, בצנתור עם תומכן (סטנט) או בתרופות שממיסות את הקריש. "זמן הוא שריר לב" – ככל שמהר יותר, כך נשמר יותר שריר.`,en:`Treatment: reopen the artery quickly, with a catheter and stent or clot-dissolving drugs. "Time is muscle" – the faster, the more heart muscle is saved.`}
+  ]},
+ {id:'cardiacarrest',color:'#b5179e',
+  he:{title:`דום לב`,short:`הלב מפסיק לשאוב דם ביעילות, בדרך כלל בגלל תקלה חשמלית. זה לא אותו דבר כמו התקף לב.`,
+   signs:[`התמוטטות פתאומית`,`אין תגובה כשקוראים או מנערים בעדינות`,`אין נשימה, או נשימה חריגה של התנשמות`],
+   act:[`הזעיקו עזרה רפואית מיד (בישראל: 101) וביקשו דפיברילטור`,`התחילו עיסויי חזה מיד: ידיים במרכז החזה, עמוק ומהר, כ־100–120 לחיצות בדקה`,`הפעילו דפיברילטור (AED) כשהוא מגיע ופעלו לפי ההוראות הקוליות`,`המשיכו עד שמגיעים אנשי הצוות`],
+   prev:[`בדיקת לב במשפחות עם מקרים של מוות פתאומי או מחלות לב`,`טיפול במחלות לב קיימות`,`לימוד החייאה: זו מיומנות שמצילה חיים`]},
+  en:{title:`Cardiac arrest`,short:`The heart stops pumping blood effectively, usually because of an electrical fault. It is not the same as a heart attack.`,
+   signs:[`Sudden collapse`,`No response when you call out or gently shake the person`,`No breathing, or only abnormal gasping`],
+   act:[`Call emergency services immediately (101 in Israel) and ask for a defibrillator`,`Start chest compressions at once: hands in the centre of the chest, push hard and fast, about 100–120 per minute`,`Use an AED as soon as it arrives and follow its voice instructions`,`Continue until professional help arrives`],
+   prev:[`Heart checks in families with sudden death or heart disease`,`Treat existing heart conditions`,`Learn CPR – a skill that saves lives`]},
+  steps:[
+   {o:['heart'],v:[190,20],he:`תקלה חשמלית (לרוב "פרפור חדרים"): החדרים רועדים במקום להתכווץ, והלב כבר לא שואב דם.`,en:`An electrical fault (often "ventricular fibrillation"): the ventricles quiver instead of contracting, and the heart no longer pumps blood.`},
+   {o:['heart','arteries','brain'],v:[0,0],he:`הדם מפסיק לזרום. תוך שניות האדם מאבד הכרה ואינו נושם כרגיל.`,en:`Blood stops flowing. Within seconds the person loses consciousness and stops breathing normally.`},
+   {o:['brain'],v:[0,0],he:`המוח רגיש במיוחד: בלי חמצן הוא מתחיל להיפגע בתוך כמה דקות. לכן כל דקה קובעת.`,en:`The brain is especially sensitive: without oxygen it starts to be damaged within minutes. Every minute counts.`},
+   {o:['heart','sternum'],v:[110,0],he:`עיסויי חזה דוחפים דם באופן ידני אל המוח והלב, ומרוויחים זמן עד שהלב יחזור לפעול.`,en:`Chest compressions push blood manually to the brain and heart, buying time until the heart can work again.`},
+   {o:['heart'],v:[75,14],he:`דפיברילטור שולח שוק חשמלי שמאפס את הפעילות החשמלית, ואם מצליח, הלב חוזר לקצב תקין.`,en:`A defibrillator sends an electric shock that resets the heart's electrical activity, and if it works the heart returns to a normal rhythm.`}
+  ]},
+ {id:'stroke',color:'#7b2cbf',
+  he:{title:`שבץ מוחי`,short:`אספקת הדם לחלק מהמוח נפסקת, בדרך כלל בגלל קריש, ותאי עצב מתחילים למות.`,
+   signs:[`פנים: צד אחד של הפנים צונח כשמנסים לחייך`,`יד: חולשה או נימול בזרוע או ברגל, בדרך כלל בצד אחד`,`דיבור: דיבור מבולבל או לא ברור, או קושי להבין`,`זמן: מתקשרים מיד! וגם: איבוד ראייה פתאומי, סחרחורת חזקה או כאב ראש חריג ופתאומי`],
+   act:[`הזעיקו עזרה רפואית מיד, גם אם התסמינים חולפים`,`רשמו מתי התחילו התסמינים – זה קובע איזה טיפול אפשרי`,`אל תתנו אוכל, שתייה או תרופות`,`הישארו עם האדם והרגיעו אותו`],
+   prev:[`איזון לחץ דם גבוה, הגורם החשוב ביותר`,`הפסקת עישון`,`טיפול בהפרעות קצב (פרפור פרוזדורים) ובסוכרת`,`פעילות גופנית ותזונה בריאה`]},
+  en:{title:`Stroke`,short:`Blood supply to part of the brain stops, usually because of a clot, and nerve cells start to die.`,
+   signs:[`Face: one side of the face droops when trying to smile`,`Arm: weakness or numbness in an arm or leg, usually on one side`,`Speech: slurred or confused speech, or trouble understanding`,`Time: call at once! Also sudden loss of vision, severe dizziness or an unusual sudden headache`],
+   act:[`Call emergency services immediately, even if symptoms pass`,`Note when the symptoms started – it decides which treatment is possible`,`Do not give food, drink or medicine`,`Stay with the person and keep them calm`],
+   prev:[`Control high blood pressure, the most important factor`,`Stop smoking`,`Treat rhythm problems (atrial fibrillation) and diabetes`,`Exercise and eat healthily`]},
+  steps:[
+   {o:['arteries'],v:[85,16],he:`בדרך כלל קריש דם חוסם עורק שמוביל דם למוח (שבץ איסכמי). לעיתים, במקום זאת, כלי דם במוח נקרע ומדמם.`,en:`Usually a blood clot blocks an artery that carries blood to the brain (ischemic stroke). Sometimes a blood vessel in the brain bursts and bleeds instead.`},
+   {o:['brain'],v:[90,16],he:`האזור שלא מקבל דם נחנק מחוסר חמצן. לפי הערכות, מאות אלפי תאי עצב נפגעים בכל דקה. "זמן הוא מוח".`,en:`The area without blood is starved of oxygen. By some estimates, hundreds of thousands of nerve cells are damaged every minute. "Time is brain".`},
+   {o:['brain','nerves'],v:[90,16],he:`התסמינים תלויים באזור שנפגע: צד אחד של הפנים צונח, יד נחלשת או הדיבור משתבש. כל חצי מוח שולט בצד הנגדי של הגוף.`,en:`Symptoms depend on the area hit: one side of the face droops, an arm weakens or speech is disturbed. Each half of the brain controls the opposite side of the body.`},
+   {o:['brain','arteries'],v:[75,14],he:`הטיפול: תרופה שממיסה את הקריש או הוצאה של הקריש בצנתור, בתוך שעות ספורות מתחילת התסמינים, ואחר כך שיקום.`,en:`Treatment: a clot-dissolving drug or removing the clot with a catheter, within a few hours of the start of symptoms, followed by rehabilitation.`}
+  ]},
+ {id:'flu',color:'#2a9d8f',
+  he:{title:`שפעת`,short:`זיהום נגיפי של דרכי הנשימה שמתפשט בקלות מאדם לאדם.`,
+   signs:[`חום גבוה שמתחיל בפתאומיות, צמרמורות`,`כאבי שרירים וראש, עייפות חזקה`,`שיעול יבש וכאב גרון`],
+   act:[`מנוחה ושתייה מרובה`,`תרופות להורדת חום וכאב, לפי ההוראות`,`להישאר בבית כדי לא להדביק אחרים`,`לפנות לרופא אם יש קוצר נשימה, כאב בחזה, בלבול או חום ממושך, או אם האדם בקבוצת סיכון (תינוקות, קשישים, הרות, חולים כרוניים)`],
+   prev:[`חיסון שנתי`,`שטיפת ידיים תכופה`,`כיסוי האף והפה בשיעול או בעטישה`]},
+  en:{title:`Influenza (flu)`,short:`A viral infection of the airways that spreads easily from person to person.`,
+   signs:[`High fever that starts suddenly, chills`,`Muscle and head aches, strong tiredness`,`Dry cough and sore throat`],
+   act:[`Rest and drink plenty of fluids`,`Medicines to lower fever and pain, as directed`,`Stay home so you don't infect others`,`See a doctor if there is shortness of breath, chest pain, confusion or prolonged fever, or if the person is high-risk (babies, older adults, pregnant women, chronic illness)`],
+   prev:[`Annual vaccine`,`Frequent hand washing`,`Cover your nose and mouth when coughing or sneezing`]},
+  steps:[
+   {o:['nose','pharynx'],v:[72,14],he:`הנגיף נכנס דרך האף או הפה ונצמד לתאים שמרפדים את דרכי הנשימה.`,en:`The virus enters through the nose or mouth and attaches to the cells lining the airways.`},
+   {o:['trachea','lungs'],v:[85,18],he:`הנגיף מתרבה בתאים ופוגע ברירית. מופיעים שיעול וכאב גרון, ויש הדבקה של אחרים בשיעול ובעטישה.`,en:`The virus multiplies inside the cells and damages the lining. Cough and sore throat appear, and you can infect others when coughing and sneezing.`},
+   {o:['lymph','spleen','thymus'],v:[95,20],he:`מערכת החיסון מזהה את הנגיף ומפעילה תאי הגנה ואותות כימיים. האותות האלה הם שגורמים לעייפות, כאבי שרירים ותחושת חולי.`,en:`The immune system recognises the virus and activates defence cells and chemical signals. These signals cause tiredness, muscle aches and the feeling of being ill.`},
+   {o:['brain'],v:[105,22],he:`האותות מגיעים למוח, שמעלה את "התרמוסטט" של הגוף. החום עוזר להילחם בנגיף, ולכן מרגישים צמרמורת.`,en:`The signals reach the brain, which raises the body's "thermostat". Fever helps fight the virus, which is why you feel chills.`},
+   {o:['lungs'],v:[75,15],he:`רוב האנשים מבריאים בתוך שבוע בערך. אצל חלק, בעיקר בקבוצות סיכון, השפעת עלולה להסתבך בדלקת ריאות.`,en:`Most people recover within about a week. In some, mainly high-risk groups, flu can lead to pneumonia.`}
+  ]},
+ {id:'asthma',color:'#4895ef',
+  he:{title:`התקף אסתמה`,short:`דרכי האוויר בריאות מצטמצמות פתאום, וקשה לנשוף אוויר החוצה.`,
+   signs:[`צפצופים בנשימה`,`שיעול, בעיקר בלילה או אחרי מאמץ`,`לחץ בחזה וקוצר נשימה`],
+   act:[`לשבת זקוף ולהישאר רגועים`,`להשתמש במשאף ההקלה לפי תוכנית הטיפול`,`להזעיק עזרה אם אין שיפור אחרי דקות ספורות, אם קשה לדבר או אם השפתיים כחלחלות`],
+   prev:[`הימנעות ממפעילים (אבק, עשן, אלרגנים)`,`שימוש קבוע בתרופות המניעה`,`תוכנית טיפול כתובה עם הרופא`]},
+  en:{title:`Asthma attack`,short:`The airways in the lungs suddenly narrow, making it hard to breathe air out.`,
+   signs:[`Wheezing`,`Cough, especially at night or after exertion`,`Chest tightness and shortness of breath`],
+   act:[`Sit upright and stay calm`,`Use the reliever inhaler as in your treatment plan`,`Call for help if there is no improvement after a few minutes, if talking is hard or the lips turn bluish`],
+   prev:[`Avoid triggers (dust, smoke, allergens)`,`Take preventer medicine regularly`,`Keep a written action plan with your doctor`]},
+  steps:[
+   {o:['lungs','trachea'],v:[90,20],he:`מפעיל (אלרגן, אוויר קר, מאמץ או זיהום) מגרה את דרכי האוויר.`,en:`A trigger (allergen, cold air, exertion or infection) irritates the airways.`},
+   {o:['lungs'],v:[110,30],he:`דפנות הסימפונות מתנפחות, השריר סביבן מתכווץ והריר מצטבר. דרכי האוויר נעשות צרות.`,en:`The walls of the bronchi swell, the muscle around them tightens and mucus builds up. The airways become narrow.`},
+   {o:['diaphragm','lungs'],v:[125,38],he:`האוויר נתקע בריאות וקשה לנשוף. השרירים מתאמצים, נשמעים צפצופים, והחזה מרגיש לחוץ.`,en:`Air gets trapped in the lungs and it is hard to breathe out. Muscles work hard, you hear wheezing, and the chest feels tight.`},
+   {o:['lungs'],v:[90,20],he:`משאף הקלה משחרר את השריר סביב הסימפונות, ודרכי האוויר נפתחות בתוך דקות.`,en:`A reliever inhaler relaxes the muscle around the bronchi, and the airways open within minutes.`}
+  ]},
+ {id:'diabetes',color:'#f4a261',
+  he:{title:`סוכרת`,short:`הגוף לא מצליח להכניס סוכר מהדם אל התאים, ולכן רמת הסוכר בדם נשארת גבוהה.`,
+   signs:[`צמא רב ושתן תכוף`,`עייפות ורעב`,`ירידה במשקל (בסוג 1), ראייה מטושטשת, פצעים שמחלימים לאט`],
+   act:[`בדיקת דם לסוכר אצל הרופא`,`ניטור סוכר, תרופות או אינסולין לפי הצורך`,`תזונה מאוזנת ופעילות גופנית`,`מצב חירום: הקאות, בלבול, נשימה מהירה או ריח פירותי בנשימה – לפנות מיד לעזרה רפואית`],
+   prev:[`סוכרת סוג 2: שמירה על משקל תקין, תנועה ותזונה מאוזנת`,`סוכרת סוג 1 אינה ניתנת למניעה`]},
+  en:{title:`Diabetes`,short:`The body cannot move sugar from the blood into the cells, so blood sugar stays high.`,
+   signs:[`Strong thirst and frequent urination`,`Tiredness and hunger`,`Weight loss (type 1), blurred vision, slow-healing wounds`],
+   act:[`A blood sugar test at the doctor`,`Monitor sugar, take medicine or insulin as needed`,`Balanced diet and physical activity`,`Emergency: vomiting, confusion, fast breathing or a fruity smell on the breath – get medical help at once`],
+   prev:[`Type 2: keep a healthy weight, stay active and eat a balanced diet`,`Type 1 cannot be prevented`]},
+  steps:[
+   {o:['pancreas'],v:[72,14],he:`הלבלב מייצר אינסולין, ההורמון שמאפשר לסוכר להיכנס לתאים. בסוג 1 מערכת החיסון הורסת את התאים המייצרים אותו; בסוג 2 התאים מגיבים לאינסולין חלש.`,en:`The pancreas makes insulin, the hormone that lets sugar into cells. In type 1 the immune system destroys the cells that make it; in type 2 the cells respond poorly to insulin.`},
+   {o:['arteries','veins','liver'],v:[75,14],he:`הסוכר נשאר בדם ורמתו עולה. הכבד אפילו משחרר עוד סוכר, וכך המצב מחמיר.`,en:`Sugar stays in the blood and its level rises. The liver even releases more sugar, making things worse.`},
+   {o:['kidneys','bladder'],v:[78,15],he:`הכליות מנסות להיפטר מהעודף בשתן, ומושכות איתו הרבה מים. התוצאה: צמא ושתן תכוף.`,en:`The kidneys try to get rid of the excess in urine, pulling lots of water with it. The result: thirst and frequent urination.`},
+   {o:['eyes','nerves','kidneys','arteries'],v:[78,15],he:`אם הסוכר נשאר גבוה שנים, הוא פוגע בכלי דם קטנים ובעצבים – בעיניים, בכליות, ברגליים ובלב.`,en:`If sugar stays high for years, it damages small blood vessels and nerves – in the eyes, kidneys, feet and heart.`},
+   {o:['pancreas','liver'],v:[72,14],he:`אפשר לחיות היטב עם סוכרת: ניטור, תרופות או אינסולין, תזונה ותנועה שומרים על הסוכר בטווח תקין.`,en:`You can live well with diabetes: monitoring, medicine or insulin, diet and exercise keep sugar in a healthy range.`}
+  ]},
+ {id:'kidneystone',color:'#2ec4b6',
+  he:{title:`אבן בכליה`,short:`גבישים של מינרלים בשתן מתאחדים לאבן שעלולה לחסום את דרכי השתן.`,
+   signs:[`כאב עז בצד הגב או הבטן שבא בגלים ויכול להקרין למפשעה`,`דם בשתן`,`בחילה והקאות`],
+   act:[`לפנות לרופא לבדיקה`,`שתייה מרובה ותרופות לכאב לפי הנחיית הרופא`,`לפנות מיד לחדר מיון אם יש חום, חוסר יכולת להשתין או כאב בלתי נשלט`],
+   prev:[`לשתות הרבה מים`,`להפחית מלח`,`להתייעץ על תזונה אם הייתה אבן בעבר`]},
+  en:{title:`Kidney stone`,short:`Mineral crystals in the urine clump into a stone that can block the urinary tract.`,
+   signs:[`Severe pain in the side of the back or abdomen that comes in waves and can spread to the groin`,`Blood in the urine`,`Nausea and vomiting`],
+   act:[`See a doctor for assessment`,`Drink plenty of fluids and take pain medicine as the doctor directs`,`Go to the emergency room if there is fever, inability to urinate or uncontrolled pain`],
+   prev:[`Drink plenty of water`,`Cut down on salt`,`Get diet advice if you have had a stone before`]},
+  steps:[
+   {o:['kidneys'],v:[72,14],he:`כשהשתן מרוכז, מינרלים כמו סידן נקשרים לגבישים ויוצרים אבן קטנה בתוך הכליה.`,en:`When urine is concentrated, minerals such as calcium bind into crystals and form a small stone inside the kidney.`},
+   {o:['ureters'],v:[95,18],he:`האבן נכנסת לשופכן, צינור צר. היא חוסמת את זרימת השתן, הכליה מתנפחת, והכאב החזק מגיע בגלים.`,en:`The stone enters the ureter, a narrow tube. It blocks the flow of urine, the kidney swells and the strong pain comes in waves.`},
+   {o:['bladder'],v:[85,16],he:`האבן מגיעה לשלפוחית ויוצאת עם השתן. רוב האבנים הקטנות עוברות לבד תוך ימים עד שבועות.`,en:`The stone reaches the bladder and leaves with the urine. Most small stones pass on their own within days to weeks.`},
+   {o:['kidneys','ureters'],v:[72,14],he:`אבנים גדולות לא יוצאות לבד. אפשר לנפץ אותן בגלי הלם או להוציא אותן במכשיר דק.`,en:`Large stones do not pass by themselves. They can be broken up with shock waves or removed with a thin instrument.`}
+  ]},
+ {id:'fracture',color:'#e9c46a',
+  he:{title:`שבר בעצם`,short:`עצם נשברת ואז מתחדשת. העצם היא רקמה חיה ומתאחה בעצמה.`,
+   signs:[`כאב חזק, נפיחות וכחלון`,`עיוות או חוסר יכולת להזיז או להישען`,`לפעמים נשמע או מורגש "קראק"`],
+   act:[`לקבע את האיבר במצב שבו הוא נמצא ולא לנסות ליישר`,`קרח עטוף בבד להפחתת נפיחות`,`לפנות לבדיקה ולצילום`,`להזעיק עזרה מיידית אם העצם בוקעת מהעור, יש דימום חזק או חשד לשבר בצוואר או בגב`],
+   prev:[`סידן וויטמין D`,`פעילות גופנית שמחזקת עצמות`,`ציוד מגן וזהירות מנפילות`]},
+  en:{title:`Broken bone`,short:`A bone cracks and then heals. Bone is living tissue and mends itself.`,
+   signs:[`Strong pain, swelling and bruising`,`Deformity, or being unable to move or put weight on the limb`,`Sometimes a "crack" is heard or felt`],
+   act:[`Keep the limb still in the position you find it; do not try to straighten it`,`Ice wrapped in cloth to reduce swelling`,`Get it examined and X-rayed`,`Call emergency services at once if the bone pierces the skin, there is heavy bleeding, or a neck or back injury is suspected`],
+   prev:[`Calcium and vitamin D`,`Exercise that strengthens bones`,`Protective gear and care to avoid falls`]},
+  steps:[
+   {o:['tibia'],v:[85,16],he:`העצם נשברת, וכלי דם בתוכה נקרעים. מצטבר דם סביב השבר ויוצר המטומה, ומופיעים כאב ונפיחות.`,en:`The bone breaks and blood vessels inside it tear. Blood collects around the break and forms a clot (hematoma), with pain and swelling.`},
+   {o:['tibia'],v:[75,14],he:`בתוך ימים עד שבועות נוצרת סביב השבר רקמה רכה וגמישה (קאלוס רך) שמחברת את הקצוות.`,en:`Within days to weeks, a soft, flexible tissue (soft callus) forms around the break and joins the ends.`},
+   {o:['tibia'],v:[72,14],he:`הקאלוס הרך מתקשה לעצם חדשה (קאלוס קשה). בשלב הזה העצם כבר יציבה, אך עדיין לא חזקה כמו קודם.`,en:`The soft callus hardens into new bone (hard callus). At this stage the bone is stable, but not yet as strong as before.`},
+   {o:['tibia','quads','calf'],v:[72,14],he:`בחודשים הבאים העצם מעצבת את עצמה מחדש לצורתה המקורית. פעילות הדרגתית ושיקום מחזקים אותה.`,en:`Over the following months the bone remodels itself to its original shape. Gradual activity and rehabilitation strengthen it.`}
+  ]},
+ {id:'anaphylaxis',color:'#ff7b00',
+  he:{title:`תגובה אלרגית חמורה (אנפילקסיס)`,short:`תגובה אלרגית מהירה שמשפיעה על כל הגוף ועלולה לסכן חיים.`,
+   signs:[`פריחה או חרלת, נפיחות בשפתיים, בפנים או בלשון`,`קשיי נשימה, צפצופים או בלוע נפוח`,`סחרחורת, דופק מהיר, חולשה`,`הקאות או כאבי בטן`],
+   act:[`אם יש עט אפינפרין (אפיפן) – להזריק מיד לפי ההוראות`,`להזעיק עזרה רפואית מיד, גם אם המצב השתפר`,`לשכב עם רגליים מורמות; אם קשה לנשום, לשבת`,`לא להשאיר את האדם לבד`],
+   prev:[`הימנעות מהמזון או החומר שגורם לאלרגיה`,`נשיאת עט אפינפרין אם הרופא רשם`,`מעקב אצל אלרגולוג`]},
+  en:{title:`Severe allergic reaction (anaphylaxis)`,short:`A fast allergic reaction affecting the whole body that can be life-threatening.`,
+   signs:[`Rash or hives, swelling of the lips, face or tongue`,`Difficulty breathing, wheezing or a swollen throat`,`Dizziness, fast pulse, weakness`,`Vomiting or stomach pain`],
+   act:[`If an epinephrine pen (EpiPen) is available, inject at once as instructed`,`Call emergency services immediately, even if the person improves`,`Lie down with legs raised; if breathing is hard, sit up`,`Do not leave the person alone`],
+   prev:[`Avoid the food or substance that triggers it`,`Carry an epinephrine pen if the doctor prescribed one`,`Follow up with an allergist`]},
+  steps:[
+   {o:['lymph','spleen','thymus'],v:[85,16],he:`אחרי מגע באלרגן (כמו בוטנים או עקיצת דבורה) מערכת החיסון מגיבה בעוצמה מוגזמת ומשחררת כמויות גדולות של היסטמין.`,en:`After contact with an allergen (such as peanuts or a bee sting), the immune system overreacts and releases large amounts of histamine.`},
+   {o:['larynx','trachea','lungs'],v:[120,30],he:`דרכי הנשימה מתנפחות ומצטמצמות. קשה לנשום, ונשמעים צפצופים.`,en:`The airways swell and narrow. Breathing becomes difficult and you hear wheezing.`},
+   {o:['arteries','heart'],v:[135,28],he:`כלי הדם מתרחבים ולחץ הדם יורד בחדות. הלב מזרז את פעימותיו, ויש סחרחורת וחולשה.`,en:`Blood vessels widen and blood pressure falls sharply. The heart speeds up, and there is dizziness and weakness.`},
+   {o:['heart','lungs'],v:[95,18],he:`אפינפרין (אדרנלין) מוזרק בשריר: הוא מצמצם את כלי הדם, פותח את דרכי האוויר ומחזק את הלב. הוא פועל בתוך דקות, אבל חייבים לפנות לטיפול רפואי.`,en:`Epinephrine (adrenaline) is injected into the muscle: it narrows blood vessels, opens the airways and strengthens the heart. It works within minutes, but medical care is still essential.`}
+  ]},
+ {id:'hypertension',color:'#d00000',
+  he:{title:`לחץ דם גבוה`,short:`הדם לוחץ על דפנות העורקים בעוצמה גבוהה לאורך זמן, בדרך כלל בלי תסמינים.`,
+   signs:[`בדרך כלל אין תסמינים, ולכן קוראים לזה "הרוצח השקט"`,`הדרך לגלות היא למדוד: לחץ דם תקין הוא סביב 120/80, וערכים קבועים מעל כ־140/90 נחשבים גבוהים`],
+   act:[`למדוד לחץ דם באופן קבוע`,`לפנות לרופא כדי לקבוע אבחנה וטיפול`,`להפחית מלח, לנוע יותר ולשמור על משקל תקין`,`ערכים גבוהים מאוד עם כאב ראש חזק, כאב בחזה או חולשה – לפנות לעזרה מיידית`],
+   prev:[`פחות מלח ויותר ירקות ופירות`,`פעילות גופנית`,`הימנעות מעישון ומאלכוהול מופרז`]},
+  en:{title:`High blood pressure`,short:`Blood pushes on the artery walls too hard for a long time, usually with no symptoms.`,
+   signs:[`Usually none, which is why it is called "the silent killer"`,`The way to find out is to measure: normal is around 120/80, and repeated readings above about 140/90 are considered high`],
+   act:[`Measure blood pressure regularly`,`See a doctor for diagnosis and treatment`,`Cut salt, move more and keep a healthy weight`,`Very high readings with a strong headache, chest pain or weakness – get help immediately`],
+   prev:[`Less salt, more vegetables and fruit`,`Exercise`,`Avoid smoking and excessive alcohol`]},
+  steps:[
+   {o:['arteries'],v:[78,14],he:`הלב שואב דם לעורקים, והלחץ על דופנותיהם נשאר גבוה לאורך זמן.`,en:`The heart pumps blood into the arteries, and the pressure on their walls stays high for a long time.`},
+   {o:['heart'],v:[80,14],he:`הלב צריך להתאמץ יותר כדי לדחוף דם נגד הלחץ, ושריר הלב מתעבה בהדרגה.`,en:`The heart has to work harder to push blood against the pressure, and the heart muscle gradually thickens.`},
+   {o:['arteries','kidneys'],v:[80,14],he:`הלחץ פוגע בדפנות כלי הדם ומקדם היווצרות פלאק. גם כלי הדם הקטנים בכליות נפגעים.`,en:`The pressure damages blood vessel walls and encourages plaque. The tiny vessels in the kidneys are damaged too.`},
+   {o:['brain','heart','kidneys','eyes'],v:[85,15],he:`עם השנים עולה הסיכון לשבץ, להתקף לב, לאי־ספיקת כליות ולפגיעה בעיניים.`,en:`Over the years the risk of stroke, heart attack, kidney failure and eye damage rises.`},
+   {o:['heart','arteries'],v:[72,14],he:`אפשר לשלוט בזה: מדידה קבועה, פחות מלח, תנועה ותרופות כשצריך מחזירות את הלחץ לטווח בטוח.`,en:`It can be controlled: regular measurement, less salt, activity and medicine when needed bring pressure back to a safe range.`}
+  ]}
+];
+
+const cond={active:false,id:null,i:0};
+const hiSet=new Set();const hiRed=new T.Color('#ff2a2a');
+const cPane=$('p-conditions');
+function restoreVitals(){const a=ACTIVITIES.find(x=>x.id===curAct)||ACTIVITIES[1];tgtBpm=a.bpm;tgtBr=a.br;}
+function focusOrgans(ids){
+  const box=new T.Box3();
+  ids.forEach(id=>ORG[id].meshes.forEach(m=>{if(m.visible)box.expandByObject(m);}));
+  if(box.isEmpty())return;
+  const c=box.getCenter(new T.Vector3()),sz=box.getSize(new T.Vector3());
+  tweenTo({target:c,dist:Math.min(34,Math.max(11,Math.max(sz.x,sz.y,sz.z)*1.5+8)),pitch:.12,yaw:0},.9);
+}
+function condStep(i){
+  const c=CONDS.find(x=>x.id===cond.id),s=c.steps[i];cond.i=i;
+  hiSet.clear();s.o.forEach(id=>{hiSet.add(id);const o=ORG[id];if(!SYS[o.sys].visible)showSystem(o.sys,true);});
+  selected=null;infoState={t:'cond'};renderInfo();
+  if(s.v){tgtBpm=s.v[0];tgtBr=s.v[1];}
+  focusOrgans(s.o);renderCond();runStep('cond');
+}
+function startCond(id){
+  if(quiz.active)endQuiz();if(journey.active)stopJourney();
+  cond.active=true;cond.id=id;condStep(0);
+}
+function stopCond(){
+  cond.active=false;hiSet.clear();restoreVitals();selected=null;showWelcome();resetCam();renderCond();
+}
+function condColorHex(){const c=CONDS.find(x=>x.id===cond.id);return c?c.color:'#ff3b5c';}
+function renderCondInfo(){
+  const c=CONDS.find(x=>x.id===cond.id);if(!c){showWelcome();return;}
+  const s=c.steps[cond.i];
+  infoEl.innerHTML=spk('cond')+'<span class="chip" style="background:'+c.color+';color:#fff">'+t('cTag')+'</span><h2>'+c[lang].title+'</h2><div class="en"></div>'+
+   '<div class="sec">'+t('cAffected')+'</div><div class="chips">'+s.o.map(id=>'<button data-org="'+id+'">'+nm(ORG[id])+'</button>').join('')+'</div>';
+}
+function renderCond(){
+  if(!cond.active){
+    cPane.innerHTML='<h3 class="h1">'+t('cTitle')+'</h3><p class="sub">'+t('cSub')+'</p>'+autoOpt()+
+      '<div class="emerg">'+t('cEmerg')+'</div>'+
+      CONDS.map(c=>'<button class="jcard" data-cstart="'+c.id+'"><b style="display:flex;align-items:center;gap:8px"><i style="width:12px;height:12px;border-radius:50%;background:'+c.color+'"></i>'+c[lang].title+'</b><span class="sub" style="display:block;margin:6px 0 0">'+c[lang].short+'</span></button>').join('')+
+      '<p class="sub" style="font-size:12px">'+t('wDisc')+'</p>';
+    return;
+  }
+  const c=CONDS.find(x=>x.id===cond.id),n=c.steps.length,s=c.steps[cond.i],d=c[lang];
+  const list=a=>'<ul>'+a.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
+  cPane.innerHTML='<button class="btn" data-cstop="1" style="font-size:13px;margin-bottom:10px">← '+t('cBack')+'</button>'+
+   '<div class="qh"><span>'+d.title+'</span><span>'+t('jStep',cond.i+1,n)+'</span></div><div class="bar"><i style="width:'+((cond.i+1)/n*100)+'%;background:'+c.color+'"></i></div>'+
+   '<p style="line-height:1.7;margin:8px 0 14px">'+spk('cond')+s[lang]+'</p>'+
+   autoOpt()+'<div class="row"><button class="btn" data-cprev="1"'+(cond.i===0?' disabled style="opacity:.4"':'')+'>'+t('jPrev')+'</button><button class="btn pri" data-cnext="1">'+(cond.i+1>=n?t('jFinish'):t('jNext'))+'</button></div>'+
+   '<div class="emerg" style="margin-top:14px">'+t('cEmerg')+'</div>'+
+   '<details open><summary>'+t('cSigns')+'</summary>'+list(d.signs)+'</details>'+
+   '<details><summary>'+t('cAct')+'</summary>'+list(d.act)+'</details>'+
+   '<details><summary>'+t('cPrev')+'</summary>'+list(d.prev)+'</details>'+
+   '<p class="sub" style="font-size:12px;margin-top:12px">'+t('wDisc')+'</p>';
+}
+cPane.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||b.disabled)return;
+  if(b.dataset.cstart)startCond(b.dataset.cstart);
+  if(b.dataset.cprev)condStep(Math.max(0,cond.i-1));
+  if(b.dataset.cnext){const n=CONDS.find(x=>x.id===cond.id).steps.length;if(cond.i+1>=n)stopCond();else condStep(cond.i+1);}
+  if(b.dataset.cstop)stopCond();
+});
+Object.assign(STR.he,{tCond:'מצבים',cTitle:'מחלות ומצבים רפואיים',cSub:'בחרו מצב וראו שלב אחר שלב מה קורה בגוף. האיברים המעורבים מסומנים באדום, והדופק והנשימה משתנים בהתאם.',
+ cEmerg:'חירום רפואי? הזעיקו עזרה מיד (בישראל: מד״א 101).',cTag:'מצב רפואי',cAffected:'איברים מעורבים',cBack:'חזרה לרשימה',cSigns:'סימני אזהרה',cAct:'מה עושים',cPrev:'מניעה'});
+Object.assign(STR.en,{tCond:'Conditions',cTitle:'Diseases and medical events',cSub:'Pick a condition and see step by step what happens in the body. Involved organs glow red, and heart and breathing rates change to match.',
+ cEmerg:'Medical emergency? Call for help at once (101 in Israel, 911 in the US).',cTag:'Condition',cAffected:'Organs involved',cBack:'Back to list',cSigns:'Warning signs',cAct:'What to do',cPrev:'Prevention'});
+
+/* ===================== NARRATION ===================== */
+const SS=(typeof window!=='undefined'&&window.speechSynthesis)?window.speechSynthesis:null;
+const narr={on:false,speaking:false,timer:null,warned:null};
+try{narr.on=localStorage.getItem('narr')==='1';}catch(e){}
+const SPK_ICON='<svg class="i-play" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg><svg class="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+function spk(kind){return '<button class="spk" data-speak="'+kind+'" aria-label="'+t('nRead')+'" title="'+t('nRead')+'">'+SPK_ICON+'</button>';}
+const plain=h=>String(h).replace(/<\/(p|li|h\d|div)>/gi,'. ').replace(/<[^>]*>/g,' ').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').replace(/\s+([.,!?])/g,'$1').replace(/([.!?])\s*\./g,'$1').trim();
+function narrText(kind){
+  if(kind==='guide')return plain(guideBody||'');
+  if(kind==='journey'&&journey.active&&!journey.done){const s=JOURNEYS[journey.id].steps[journey.i];return nm(ORG[s.o])+'. '+s[lang];}
+  if(kind==='cond'||(kind==='info'&&infoState.t==='cond')){
+    if(!cond.active)return '';
+    const c=CONDS.find(x=>x.id===cond.id);return c[lang].title+'. '+c.steps[cond.i][lang];
+  }
+  const s=infoState;
+  if(s.t==='organ'){
+    const o=ORG[s.id];
+    return nm(o)+'. '+plain(fld(o,'desc'))+' '+t('kRole')+' '+plain(fld(o,'fn'))+
+      (level>=2&&deepOf(o,'deep')?' '+plain(deepOf(o,'deep')):'')+(level>=3&&deepOf(o,'adv')?' '+plain(deepOf(o,'adv')):'')+
+      ' '+t('kOrigin')+' '+plain(fld(o,'origin'))+' '+t('kFact')+' '+plain(fld(o,'fact'));
+  }
+  if(s.t==='sys')return sysName(s.k)+'. '+plain(sfld(s.k,'sum'))+' '+plain(sfld(s.k,'origin'))+' '+t('kFact')+' '+plain(sfld(s.k,'fact'));
+  return plain(t('wTitle')+'. '+t('wP1')+' '+t('wP2')+' '+t('wP3'));
+}
+function toast(msg){const el=$('toast');el.textContent=msg;el.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>{el.style.display='none';},5000);}
+function pickVoice(){
+  const vs=SS.getVoices();if(!vs.length)return null;
+  const ok=v=>{const l=(v.lang||'').toLowerCase();return lang==='he'?(l.startsWith('he')||l.startsWith('iw')):l.startsWith('en');};
+  return vs.filter(ok).sort((a,b)=>(/natural|online/i.test(b.name)?1:0)-(/natural|online/i.test(a.name)?1:0))[0]||null;
+}
+const auto={on:false,timer:null};
+try{auto.on=localStorage.getItem('auto')==='1';}catch(e){}
+narr.token=0;
+function setSpeaking(v){narr.speaking=v;document.body.classList.toggle('speaking',v);}
+function stopSpeak(){narr.token++;clearTimeout(narr.timer);clearTimeout(auto.timer);if(SS)SS.cancel();setSpeaking(false);}
+function speak(text,onDone){
+  const tok=++narr.token;
+  clearTimeout(auto.timer);
+  const fin=()=>{if(tok!==narr.token)return;setSpeaking(false);if(onDone)onDone();};
+  const est=()=>{setSpeaking(false);if(onDone)auto.timer=setTimeout(()=>{if(tok===narr.token)onDone();},Math.max(2500,(text||'').length*65));};
+  if(!SS){toast(t('nNone'));est();return;}
+  if(!text)return;
+  SS.cancel();
+  const v=pickVoice();
+  if(!v&&SS.getVoices().length){toast(t(lang==='he'?'nNoHe':'nNoEn'));if(lang==='he'){est();return;}}
+  const parts=(text.match(/[^.!?]+[.!?]*/g)||[text]).map(x=>x.trim()).filter(Boolean);
+  const chunks=[];let cur='';
+  parts.forEach(p=>{if((cur+' '+p).length>180&&cur){chunks.push(cur);cur=p;}else cur=cur?cur+' '+p:p;});
+  if(cur)chunks.push(cur);
+  setSpeaking(true);
+  chunks.forEach((c,i)=>{
+    const u=new SpeechSynthesisUtterance(c);
+    u.lang=lang==='he'?'he-IL':'en-US';if(v)u.voice=v;u.rate=.95;
+    if(i===chunks.length-1){u.onend=fin;u.onerror=fin;}
+    SS.speak(u);
+  });
+}
+function autoOpt(){return '<label class="opt"><span>'+t('aPlay')+'</span><input type="checkbox" data-auto '+(auto.on?'checked':'')+'></label>';}
+function runStep(kind){
+  clearTimeout(auto.timer);
+  if(!auto.on){queueNarr(kind);return;}
+  clearTimeout(narr.timer);
+  narr.timer=setTimeout(()=>speak(narrText(kind),()=>{auto.timer=setTimeout(()=>autoNext(kind),2000);}),250);
+}
+function autoNext(kind){
+  if(!auto.on)return;
+  if(kind==='journey'){
+    if(!journey.active||journey.done)return;
+    const n=JOURNEYS[journey.id].steps.length;
+    if(journey.i+1>=n){journey.done=true;selected=null;showWelcome();resetCam();renderJourney();}else setStep(journey.i+1);
+  }else{
+    if(!cond.active)return;
+    const n=CONDS.find(x=>x.id===cond.id).steps.length;
+    if(cond.i+1>=n)stopCond();else condStep(cond.i+1);
+  }
+}
+document.addEventListener('change',e=>{
+  const c=e.target&&e.target.closest?e.target.closest('[data-auto]'):null;if(!c)return;
+  auto.on=c.checked;try{localStorage.setItem('auto',auto.on?'1':'0');}catch(err){}
+  if(!auto.on)stopSpeak();
+  renderJourney();renderCond();
+  if(auto.on){if(journey.active&&!journey.done)runStep('journey');else if(cond.active)runStep('cond');}
+});
+function queueNarr(kind){
+  if(!narr.on||quiz.active||!SS)return;
+  clearTimeout(narr.timer);
+  narr.timer=setTimeout(()=>speak(narrText(kind)),200);
+}
+function syncNarrBtn(){
+  const b=$('bNarr');b.classList.toggle('on',narr.on);b.setAttribute('aria-pressed',narr.on?'true':'false');
+  b.title=t(narr.on?'nOn':'nOff');b.setAttribute('aria-label',t(narr.on?'nOn':'nOff'));
+}
+$('bNarr').onclick=()=>{
+  narr.on=!narr.on;try{localStorage.setItem('narr',narr.on?'1':'0');}catch(e){}
+  syncNarrBtn();
+  if(!SS){toast(t('nNone'));return;}
+  if(narr.on){toast(t('nOnMsg'));
+    const k=journey.active?'journey':cond.active?'cond':'info';speak(narrText(k));}
+  else stopSpeak();
+};
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-speak]');if(!b)return;
+  e.stopPropagation();
+  if(narr.speaking){stopSpeak();return;}
+  speak(narrText(b.dataset.speak));
+},true);
+if(SS&&SS.onvoiceschanged!==undefined)SS.onvoiceschanged=()=>{};
+Object.assign(STR.he,{aPlay:'ניגון אוטומטי: קריינות, ומעבר לשלב הבא אחרי 2 שניות',nRead:'הקראה',nOn:'קריינות אוטומטית פועלת. לחצו לכיבוי',nOff:'קריינות אוטומטית כבויה. לחצו להפעלה',
+ nOnMsg:'קריינות אוטומטית פועלת: כל הסבר חדש יוקרא בקול.',nNone:'הדפדפן הזה לא תומך בהקראה בקול.',
+ nNoHe:'לא נמצא קול בעברית במכשיר. נסו Microsoft Edge, או התקינו קול בעברית בהגדרות המערכת.',nNoEn:'לא נמצא קול באנגלית במכשיר.'});
+Object.assign(STR.en,{aPlay:'Auto-play: narrate, then go to the next step after 2 seconds',nRead:'Read aloud',nOn:'Auto narration is on. Click to turn off',nOff:'Auto narration is off. Click to turn on',
+ nOnMsg:'Auto narration is on: each new explanation will be read aloud.',nNone:'This browser does not support speech.',
+ nNoHe:'No Hebrew voice found on this device. Try Microsoft Edge, or install a Hebrew voice in system settings.',nNoEn:'No English voice found on this device.'});
+
+/* ===================== INIT ===================== */
+applyLang();applyTheme();resize();applyCam();frame();
+if(!isMobile())openTab('explore');
+</script></body></html>
